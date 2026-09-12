@@ -15,6 +15,7 @@ export function TopNav() {
     toggleSound,
     openSettings,
     openProfile,
+    openTacticalPanel,
     playSfx,
     t,
   } = useGame();
@@ -116,6 +117,17 @@ export function TopNav() {
           <span>🪙</span>
           <span className="font-mono">{(player?.stats?.gold ?? 0).toLocaleString()}</span>
         </div>
+
+        {/* Tactical Command Forge Trigger */}
+        <button
+          type="button"
+          onClick={openTacticalPanel}
+          title="Open Tactical Command (Aether Forge Suite) - Press 'T'"
+          className="hidden sm:flex items-center gap-1.5 bg-[#fad02c] hover:bg-[#ffe169] text-black border-2 border-black rounded-lg px-2.5 py-1 text-xs font-black shadow-solid-sm transition-all cursor-pointer hover:-translate-y-0.5"
+        >
+          <span>⚡</span>
+          <span className="uppercase tracking-tight">TACTICAL</span>
+        </button>
 
         {/* Settings Gear Icon Button */}
         <button

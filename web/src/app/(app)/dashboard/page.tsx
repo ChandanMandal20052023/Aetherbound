@@ -6,7 +6,6 @@ import { HeroSagaCard } from '@/components/dashboard/HeroSagaCard';
 import { QuestCard } from '@/components/dashboard/QuestCard';
 import { MomentumStreak } from '@/components/dashboard/MomentumStreak';
 import { LevelUpModal } from '@/components/modals/LevelUpModal';
-import { Button } from '@/components/ui/Button';
 import { playerService } from '@/services/player.service';
 import { questService } from '@/services/quest.service';
 import type { PlayerProfile } from '@/types/player';
@@ -17,9 +16,7 @@ export default function DashboardPage() {
     player: gamePlayer,
     playSfx,
     refreshPlayer,
-    openAlchemist,
-    openFocusChamber,
-    openBattleCard,
+    openTacticalPanel,
     t,
   } = useGame();
   const [player, setPlayer] = useState<PlayerProfile | null>(gamePlayer);
@@ -170,45 +167,6 @@ export default function DashboardPage() {
           <span>{toastMessage}</span>
         </div>
       )}
-
-      {/* Rapid Tactical Command Bar */}
-      <div className="bg-[#201335] border-3 border-black shadow-solid-lg rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="bg-[#fad02c] text-black px-2.5 py-0.5 border-2 border-black font-black text-xs shadow-solid-sm uppercase rounded">
-            TACTICAL COMMAND
-          </div>
-          <span className="text-xs font-bold text-white uppercase tracking-wider hidden sm:inline">
-            AETHER FORGE SUITE
-          </span>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2.5">
-          <Button
-            variant="gold"
-            size="sm"
-            onClick={openAlchemist}
-            className="text-xs font-black uppercase shadow-solid-sm"
-          >
-            ⚡ AI ALCHEMIST
-          </Button>
-          <Button
-            variant="lavender"
-            size="sm"
-            onClick={openFocusChamber}
-            className="text-xs font-black uppercase shadow-solid-sm"
-          >
-            ⏳ FOCUS CRUCIBLE
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={openBattleCard}
-            className="text-xs font-black uppercase shadow-solid-sm"
-          >
-            🎴 BATTLE CARD
-          </Button>
-        </div>
-      </div>
 
       {/* Main Content Grid: 12 Columns */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

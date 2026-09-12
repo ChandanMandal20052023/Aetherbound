@@ -62,6 +62,12 @@ interface GameContextType {
   showBattleCard: boolean;
   openBattleCard: () => void;
   closeBattleCard: () => void;
+
+  // Tactical Command Side Panel (Aether Forge Suite)
+  showTacticalPanel: boolean;
+  openTacticalPanel: () => void;
+  closeTacticalPanel: () => void;
+  toggleTacticalPanel: () => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -77,7 +83,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   // Language Complexity Mode
   const [languageMode, setLanguageModeState] = useState<LanguageMode>('arcane');
 
-  // Modals
+  // Modals & Panels
   const [showTutorial, setShowTutorial] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -86,6 +92,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const [showAlchemist, setShowAlchemist] = useState(false);
   const [showFocusChamber, setShowFocusChamber] = useState(false);
   const [showBattleCard, setShowBattleCard] = useState(false);
+  const [showTacticalPanel, setShowTacticalPanel] = useState(false);
 
   // Load player profile
   const refreshPlayer = useCallback(async () => {
@@ -235,6 +242,21 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setShowBattleCard(false);
   }, []);
 
+  const openTacticalPanel = useCallback(() => {
+    sound.play('click');
+    setShowTacticalPanel(true);
+  }, []);
+
+  const closeTacticalPanel = useCallback(() => {
+    sound.play('click');
+    setShowTacticalPanel(false);
+  }, []);
+
+  const toggleTacticalPanel = useCallback(() => {
+    sound.play('click');
+    setShowTacticalPanel((prev) => !prev);
+  }, []);
+
   const updateAvatar = useCallback(async (index: number) => {
     setPlayer((prev) => (prev ? { ...prev, avatarIndex: index } : prev));
     await playerService.updateAvatar(index);
@@ -283,6 +305,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         showBattleCard,
         openBattleCard,
         closeBattleCard,
+        showTacticalPanel,
+        openTacticalPanel,
+        closeTacticalPanel,
+        toggleTacticalPanel,
       }}
     >
       {children}

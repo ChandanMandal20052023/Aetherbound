@@ -4,6 +4,7 @@ import { TopNav } from '@/components/layout/TopNav';
 import { Footer } from '@/components/layout/Footer';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { AppModals } from '@/components/modals/AppModals';
+import { TacticalSidePanel } from '@/components/layout/TacticalSidePanel';
 
 export default function AppLayout({
   children,
@@ -21,8 +22,9 @@ export default function AppLayout({
         <MobileBottomNav />
       </div>
 
-      {/* Global Modals */}
+      {/* Global Modals & Tactical HUD Side Panel */}
       <AppModals />
+      <TacticalSidePanel />
     </GameProvider>
   );
 }
