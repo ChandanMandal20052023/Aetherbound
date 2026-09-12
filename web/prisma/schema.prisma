@@ -1,0 +1,146 @@
+// Aetherbound Life RPG — Prisma Schema
+// Dev: SQLite (zero setup)
+// Prod: PostgreSQL / Neon (just change DATABASE_URL + provider to "postgresql")
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+
+// ─────────────────────────────────────────────────────
+// AUTH
+// ─────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  email        String   @unique
+  passwordHash String
+  avatarIndex  Int      @default(1)
+  createdAt    DateTime @default(now())
+
+  stats         PlayerStats?
+  quests        Quest[]
+  inventoryItems InventoryItem[]
+  ownedShopItems OwnedShopItem[]
+  pingsReceived  Ping[]          @relation("PingTarget")
+  pingsSent      Ping[]          @relation("PingSource")
+}
+
+// ─────────────────────────────────────────────────────
+// PLAYER STATS (1:1 with User)
+// ─────────────────────────────────────────────────────
+
+model PlayerStats {
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  level                Int       @default(1)
+  xp                   Int       @default(0)
+  xpToNextLevel        Int       @default(125)
+  streakDays           Int       @default(0)
+  gold                 Int       @default(500)
+  sunlitPeach          Int       @default(50)
+  season               Int       @default(3)
+  seasonName           String    @default("Moonfall Cycle")
+  seasonDaysRemaining  Int       @default(22)
+  dailyBonusClaimed    Boolean   @default(false)
+  dailyBonusClaimedAt  DateTime?
+  lastActiveAt         DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────────────
+// QUESTS
+// ─────────────────────────────────────────────────────
+
+model Quest {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String
+  category    String   // main | side | active
+  rarity      String   // trivial | common | rare | epic | legendary
+  risk        String   // low | medium | high
+  status      String   @default("available") // available | active | completed | failed
+  xpReward    Int
+  goldReward  Int
+  emoji       String   @default("⚡")
+  deadline    String?  // ISO date string, optional
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────────────
+// INVENTORY
+// ─────────────────────────────────────────────────────
+
+model InventoryItem {
+  id     String @id @default(cuid())
+  userId String
+  name   String
+  rarity String // common | rare | epic | legendary
+  type   String // weapon | armor | consumable | cosmetic | key-item
+  status String @default("stored") // equipped | stored
+  icon   String // Material Symbol name
+  slot   String? // head | chest | weapon | boots | accessory
+  stats  String  // JSON string: [{label, value}]
+  lore   String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────────────
+// SHOP (global catalog, seeded once)
+// ─────────────────────────────────────────────────────
+
+model ShopItem {
+  id                String  @id @default(cuid())
+  name              String
+  description       String
+  lore              String?
+  rarity            String
+  category          String  // characters | gear | weapons | apparel | badges | consumables
+  goldCost          Int
+  peachCost         Int?
+  requiredLevel     Int?
+  imageUrl          String
+  stats             String  // JSON string: [{label, icon}]
+  milestoneProgress Int?    // 0-100, for milestone-only items
+
+  ownedBy OwnedShopItem[]
+}
+
+model OwnedShopItem {
+  id         String   @id @default(cuid())
+  userId     String
+  shopItemId String
+  purchasedAt DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shopItem ShopItem @relation(fields: [shopItemId], references: [id])
+
+  @@unique([userId, shopItemId])
+}
+
+// ─────────────────────────────────────────────────────
+// NETWORK / PINGS
+// ─────────────────────────────────────────────────────
+
+model Ping {
+  id         String   @id @default(cuid())
+  sourceId   String
+  targetId   String
+  message    String?
+  createdAt  DateTime @default(now())
+  readAt     DateTime?
+
+  source User @relation("PingSource", fields: [sourceId], references: [id], onDelete: Cascade)
+  target User @relation("PingTarget", fields: [targetId], references: [id], onDelete: Cascade)
+}
