@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { useGame } from '@/contexts/GameContext';
+import { questService } from '@/services/quest.service';
 
 interface QuestBoardProps {
   initialQuests: Quest[];
@@ -16,6 +18,7 @@ export function QuestBoard({
   initialQuests,
   onQuestComplete,
 }: QuestBoardProps) {
+  const { playSfx, refreshPlayer, t } = useGame();
   const [quests, setQuests] = useState<Quest[]>(initialQuests);
   const [selectedCategory, setSelectedCategory] = useState<
     'all' | QuestCategory | 'completed'
@@ -23,6 +26,7 @@ export function QuestBoard({
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showErrorState, setShowErrorState] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // New quest form state
   const [newTitle, setNewTitle] = useState('');
@@ -33,6 +37,7 @@ export function QuestBoard({
   const [newXP, setNewXP] = useState(150);
 
   const handleResolve = (questId: string) => {
+    playSfx('questComplete');
     setQuests((prev) =>
       prev.map((q) =>
         q.id === questId ? { ...q, status: 'completed' } : q
@@ -42,28 +47,35 @@ export function QuestBoard({
     if (resolved && onQuestComplete) {
       onQuestComplete(resolved);
     }
+    refreshPlayer();
   };
 
-  const handleCreateQuest = (e: React.FormEvent) => {
+  const handleCreateQuest = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTitle.trim()) return;
+    if (!newTitle.trim() || isSubmitting) return;
 
-    const createdQuest: Quest = {
-      id: `quest-${Date.now()}`,
-      title: newTitle,
-      description: newDesc || 'No briefing recorded. Venture boldly.',
-      category: newCategory,
-      rarity: newRarity,
-      risk: newRisk,
-      status: 'available',
-      reward: { xp: newXP, gold: Math.round(newXP / 5) },
-      emoji: newCategory === 'main' ? '⚡' : newCategory === 'side' ? '🧪' : '🐉',
-    };
-
-    setQuests([createdQuest, ...quests]);
-    setShowCreateModal(false);
-    setNewTitle('');
-    setNewDesc('');
+    try {
+      setIsSubmitting(true);
+      const created = await questService.createQuest({
+        title: newTitle,
+        description: newDesc || 'No briefing recorded. Venture boldly.',
+        category: newCategory,
+        rarity: newRarity,
+        risk: newRisk,
+        emoji: newCategory === 'main' ? '⚡' : newCategory === 'side' ? '🧪' : '🐉',
+      });
+      playSfx('questComplete');
+      setQuests((prev) => [created, ...prev]);
+      setShowCreateModal(false);
+      setNewTitle('');
+      setNewDesc('');
+      refreshPlayer();
+    } catch (err) {
+      console.error('Failed to create quest:', err);
+      playSfx('error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const filteredQuests = quests.filter((q) => {
@@ -112,11 +124,11 @@ export function QuestBoard({
               Codex V2.4
             </span>
             <h2 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight font-heading">
-              Quest Log & Missions
+              {t.questsTitle}
             </h2>
           </div>
           <p className="text-xs sm:text-sm text-[#bccac1] font-semibold">
-            Track, accept, and resolve personal heroic challenges
+            {t.questsSubtitle}
           </p>
         </div>
 
@@ -127,7 +139,7 @@ export function QuestBoard({
             onClick={() => setShowCreateModal(true)}
             withArrow
           >
-            FORGE QUEST
+            {t.createQuest}
           </Button>
           <button
             type="button"

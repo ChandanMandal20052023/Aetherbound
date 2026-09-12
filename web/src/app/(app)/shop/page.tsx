@@ -8,9 +8,11 @@ import { ShopItemCard } from '@/components/shop/ShopItemCard';
 import { shopService } from '@/services/shop.service';
 import { playerService } from '@/services/player.service';
 import type { ShopItem, ShopCategory, SortOption } from '@/types/shop';
+import { useGame } from '@/contexts/GameContext';
 import { Button } from '@/components/ui/Button';
 
 export default function ShopPage() {
+  const { playSfx, refreshPlayer, t } = useGame();
   const [items, setItems] = useState<ShopItem[]>([]);
   const [playerGold, setPlayerGold] = useState(0);
   const [playerPeach, setPlayerPeach] = useState(0);
@@ -44,13 +46,16 @@ export default function ShopPage() {
   const handlePurchase = async (item: ShopItem) => {
     try {
       const result = await shopService.purchaseItem(item.id);
+      playSfx('purchase');
       setPlayerGold(result.newGold);
       setPlayerPeach(result.newSunlitPeach);
+      refreshPlayer();
       // Refresh catalog to update purchaseStatus
       const catalog = await shopService.getCatalog();
       setItems(catalog);
       triggerToast(`Acquired: "${item.name}"! Dispatched to your inventory.`);
     } catch (err: unknown) {
+      playSfx('error');
       triggerToast(err instanceof Error ? err.message : 'Purchase failed');
     }
   };

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useGame } from '@/contexts/GameContext';
 import { HeroSagaCard } from '@/components/dashboard/HeroSagaCard';
 import { QuestCard } from '@/components/dashboard/QuestCard';
 import { MomentumStreak } from '@/components/dashboard/MomentumStreak';
@@ -11,6 +12,7 @@ import type { PlayerProfile } from '@/types/player';
 import type { Quest } from '@/types/quest';
 
 export default function DashboardPage() {
+  const { playSfx, refreshPlayer, t } = useGame();
   const [player, setPlayer] = useState<PlayerProfile | null>(null);
   const [quests, setQuests] = useState<Quest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,6 +41,7 @@ export default function DashboardPage() {
   const handleClaimBonus = async () => {
     try {
       const result = await playerService.claimDailyBonus();
+      playSfx('dailyBonus');
       setPlayer((prev) =>
         prev
           ? {
@@ -53,8 +56,10 @@ export default function DashboardPage() {
             }
           : prev,
       );
+      refreshPlayer();
       triggerToast(`Daily bonus claimed! +${result.xpAwarded} XP & +${result.goldAwarded} Gold!`);
       if (result.leveled) {
+        playSfx('levelUp');
         setLevelUpModal({
           open: true,
           prev: result.newLevel - 1,
@@ -62,6 +67,7 @@ export default function DashboardPage() {
         });
       }
     } catch (err: unknown) {
+      playSfx('error');
       triggerToast(err instanceof Error ? err.message : 'Could not claim bonus');
     }
   };
@@ -69,6 +75,7 @@ export default function DashboardPage() {
   const handleQuestComplete = async (quest: Quest) => {
     try {
       const result = await questService.resolveQuest(quest.id);
+      playSfx('questComplete');
       setQuests((prev) =>
         prev.map((q) => (q.id === quest.id ? { ...q, status: 'completed' } : q)),
       );
@@ -87,10 +94,12 @@ export default function DashboardPage() {
             }
           : prev,
       );
+      refreshPlayer();
       triggerToast(
         `Quest Resolved: "${quest.title}"! +${result.rewards.xp} XP & +${result.rewards.gold} Gold!`,
       );
       if (result.levelUp.leveled) {
+        playSfx('levelUp');
         setLevelUpModal({
           open: true,
           prev: result.levelUp.previousLevel,
@@ -98,6 +107,7 @@ export default function DashboardPage() {
         });
       }
     } catch (err: unknown) {
+      playSfx('error');
       triggerToast(err instanceof Error ? err.message : 'Failed to resolve quest');
     }
   };

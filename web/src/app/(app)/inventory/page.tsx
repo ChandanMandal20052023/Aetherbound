@@ -6,9 +6,11 @@ import { EquipmentDoll } from '@/components/inventory/EquipmentDoll';
 import { InventoryTile } from '@/components/inventory/InventoryTile';
 import { ItemDetailPanel } from '@/components/inventory/ItemDetailPanel';
 import { inventoryService } from '@/services/inventory.service';
+import { useGame } from '@/contexts/GameContext';
 import type { InventoryItem, ItemType, ItemRarity, EquipmentLoadout } from '@/types/inventory';
 
 export default function InventoryPage() {
+  const { playSfx, refreshPlayer, t } = useGame();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [equipment, setEquipment] = useState<EquipmentLoadout>({});
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
@@ -52,15 +54,27 @@ export default function InventoryPage() {
   };
 
   const handleEquip = async (item: InventoryItem) => {
-    await inventoryService.equipItem(item.id);
-    await reload();
-    setSelectedItem({ ...item, status: 'equipped' });
+    try {
+      await inventoryService.equipItem(item.id);
+      playSfx('equip');
+      await reload();
+      setSelectedItem({ ...item, status: 'equipped' });
+      refreshPlayer();
+    } catch {
+      playSfx('error');
+    }
   };
 
   const handleUnequip = async (item: InventoryItem) => {
-    await inventoryService.unequipItem(item.id);
-    await reload();
-    setSelectedItem({ ...item, status: 'stored' });
+    try {
+      await inventoryService.unequipItem(item.id);
+      playSfx('unequip');
+      await reload();
+      setSelectedItem({ ...item, status: 'stored' });
+      refreshPlayer();
+    } catch {
+      playSfx('error');
+    }
   };
 
   const filteredItems = emptyDemo

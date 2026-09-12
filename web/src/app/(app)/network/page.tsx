@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
 
 
+import { useGame } from '@/contexts/GameContext';
+
 interface Operative {
   id: string;
   name: string;
@@ -56,6 +58,7 @@ const INITIAL_OPERATIVES: Operative[] = [
 ];
 
 export default function NetworkPage() {
+  const { player, playSfx, t } = useGame();
   const [operatives, setOperatives] = useState(INITIAL_OPERATIVES);
   const [loadingOperatives, setLoadingOperatives] = useState(true);
 
@@ -93,6 +96,7 @@ export default function NetworkPage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const handlePing = (id: string, name: string) => {
+    playSfx('click');
     setOperatives((prev) =>
       prev.map((op) => (op.id === id ? { ...op, pinged: true } : op))
     );
@@ -104,10 +108,12 @@ export default function NetworkPage() {
     e.preventDefault();
     if (!newBroadcast.trim()) return;
 
+    playSfx('dailyBonus');
+    const myName = player?.username ?? 'Operative';
     setTransmissions([
       {
         id: `t-${Date.now()}`,
-        sender: 'Arcane_Trailblazer (You)',
+        sender: `${myName} (You)`,
         message: newBroadcast,
         time: 'Just now',
       },
