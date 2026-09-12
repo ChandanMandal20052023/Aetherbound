@@ -1,7 +1,10 @@
 import React from 'react';
+import { GameProvider } from '@/contexts/GameContext';
 import { TopNav } from '@/components/layout/TopNav';
 import { Footer } from '@/components/layout/Footer';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
+import { TutorialModal } from '@/components/modals/TutorialModal';
+import { SettingsModal } from '@/components/modals/SettingsModal';
 
 export default function AppLayout({
   children,
@@ -9,13 +12,19 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex flex-col justify-between p-3 sm:p-4 md:p-8 pb-24 md:pb-8">
-      <div className="max-w-[1280px] w-full mx-auto space-y-6 flex-1">
-        <TopNav />
-        <main>{children}</main>
+    <GameProvider>
+      <div className="min-h-screen flex flex-col justify-between p-3 sm:p-4 md:p-8 pb-24 md:pb-8">
+        <div className="max-w-[1280px] w-full mx-auto space-y-6 flex-1">
+          <TopNav />
+          <main>{children}</main>
+        </div>
+        <Footer />
+        <MobileBottomNav />
       </div>
-      <Footer />
-      <MobileBottomNav />
-    </div>
+
+      {/* Global Modals */}
+      <TutorialModal />
+      <SettingsModal />
+    </GameProvider>
   );
 }
