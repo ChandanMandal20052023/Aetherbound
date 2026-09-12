@@ -5,11 +5,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
+import { authService } from '@/services/auth.service';
 
 export function LoginForm() {
   const router = useRouter();
-  const [email, setEmail] = useState('trailblazer_01@arcane.net');
-  const [password, setPassword] = useState('••••••••••••');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,21 +19,15 @@ export function LoginForm() {
     setLoading(true);
     setError(null);
 
-    // Simulate authentication service call
-    setTimeout(() => {
-      setLoading(false);
-      router.push('/dashboard');
-    }, 600);
-  };
+    const result = await authService.login(email, password);
+    setLoading(false);
 
-  const handleQuickLogin = (demoUser: string) => {
-    setEmail(demoUser);
-    setPassword('demopassword123');
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    if (result.ok) {
       router.push('/dashboard');
-    }, 400);
+      router.refresh();
+    } else {
+      setError(result.error ?? 'Login failed');
+    }
   };
 
   return (
@@ -80,21 +75,9 @@ export function LoginForm() {
         </div>
 
         <div className="space-y-1">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-extrabold uppercase text-[#ebdcff] tracking-wider block">
-              Cipher Key (Password)
-            </label>
-            <a
-              href="#"
-              className="text-[11px] font-bold text-[#ffb68d] hover:underline"
-              onClick={(e) => {
-                e.preventDefault();
-                alert('Demo key reset: simply click "ENTER GATEWAY"');
-              }}
-            >
-              Lost Cipher?
-            </a>
-          </div>
+          <label className="text-xs font-extrabold uppercase text-[#ebdcff] tracking-wider block">
+            Cipher Key (Password)
+          </label>
           <input
             type="password"
             required
@@ -118,37 +101,11 @@ export function LoginForm() {
         </Button>
       </form>
 
-      {/* Quick Access Presets */}
-      <div className="pt-2 border-t-2 border-black/40 space-y-2">
-        <span className="text-[10px] font-extrabold uppercase text-[#bccac1] tracking-widest block text-center">
-          ⚡ Quick Demo Link
-        </span>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => handleQuickLogin('trailblazer_01@arcane.net')}
-            className="px-2.5 py-1.5 bg-[#25193a] hover:bg-[#351c5e] border-2 border-black rounded-lg text-xs font-black text-[#7ef9c7] shadow-solid-sm transition-all"
-          >
-            Trailblazer (L12)
-          </button>
-          <button
-            type="button"
-            onClick={() => handleQuickLogin('novice_scout@arcane.net')}
-            className="px-2.5 py-1.5 bg-[#25193a] hover:bg-[#351c5e] border-2 border-black rounded-lg text-xs font-black text-[#ffb68d] shadow-solid-sm transition-all"
-          >
-            Guest Scout (L1)
-          </button>
-        </div>
-      </div>
-
       {/* Switch to Register */}
       <div className="text-center pt-2">
         <p className="text-xs text-[#bccac1] font-semibold">
           Unregistered in the Aether Codex?{' '}
-          <Link
-            href="/register"
-            className="text-[#7ef9c7] font-extrabold hover:underline"
-          >
+          <Link href="/register" className="text-[#7ef9c7] font-extrabold hover:underline">
             Initialize Saga →
           </Link>
         </p>

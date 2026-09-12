@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
+
 
 interface Operative {
   id: string;
@@ -56,6 +57,18 @@ const INITIAL_OPERATIVES: Operative[] = [
 
 export default function NetworkPage() {
   const [operatives, setOperatives] = useState(INITIAL_OPERATIVES);
+  const [loadingOperatives, setLoadingOperatives] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/network/operatives')
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) setOperatives(data);
+      })
+      .catch(() => {/* fallback to INITIAL_OPERATIVES already set */})
+      .finally(() => setLoadingOperatives(false));
+  }, []);
+
   const [transmissions, setTransmissions] = useState([
     {
       id: 't-1',

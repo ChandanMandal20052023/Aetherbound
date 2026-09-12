@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
+import { authService } from '@/services/auth.service';
 
 export function RegisterForm() {
   const router = useRouter();
@@ -14,14 +15,22 @@ export function RegisterForm() {
   const [classChoice, setClassChoice] = useState<'scout' | 'knight' | 'alchemist'>('scout');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
-    setTimeout(() => {
-      setLoading(false);
+    const result = await authService.register(username, email, password);
+    setLoading(false);
+
+    if (result.ok) {
       router.push('/dashboard');
-    }, 600);
+      router.refresh();
+    } else {
+      setError(result.error ?? 'Registration failed');
+    }
   };
 
   return (
@@ -45,6 +54,12 @@ export function RegisterForm() {
           Forge your player codex and begin cycle 3
         </p>
       </div>
+
+      {error && (
+        <div className="bg-[#ff5a5a]/20 border-2 border-[#ff5a5a] text-[#ffb4ab] px-3 py-2 rounded-lg text-xs font-bold shadow-solid-sm">
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1">

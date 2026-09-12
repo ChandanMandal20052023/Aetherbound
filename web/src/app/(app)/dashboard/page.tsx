@@ -1,56 +1,141 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HeroSagaCard } from '@/components/dashboard/HeroSagaCard';
 import { QuestCard } from '@/components/dashboard/QuestCard';
 import { MomentumStreak } from '@/components/dashboard/MomentumStreak';
-import { mockPlayer } from '@/lib/mock/player';
-import { mockQuests } from '@/lib/mock/quests';
+import { LevelUpModal } from '@/components/modals/LevelUpModal';
+import { playerService } from '@/services/player.service';
+import { questService } from '@/services/quest.service';
+import type { PlayerProfile } from '@/types/player';
 import type { Quest } from '@/types/quest';
 
 export default function DashboardPage() {
-  const [player, setPlayer] = useState(mockPlayer);
-  const [quests, setQuests] = useState(mockQuests);
+  const [player, setPlayer] = useState<PlayerProfile | null>(null);
+  const [quests, setQuests] = useState<Quest[]>([]);
+  const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [levelUpModal, setLevelUpModal] = useState<{ open: boolean; prev: number; next: number }>({
+    open: false,
+    prev: 1,
+    next: 2,
+  });
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const handleClaimBonus = () => {
-    setPlayer((prev) => ({
-      ...prev,
-      stats: {
-        ...prev.stats,
-        gold: prev.stats.gold + 50,
-        xp: prev.stats.xp + 50,
-        dailyBonusClaimed: true,
-      },
-    }));
-    triggerToast('Daily bonus claimed! +50 XP & +50 Gold awarded.');
+  useEffect(() => {
+    Promise.all([playerService.getProfile(), questService.getQuests()])
+      .then(([p, q]) => {
+        setPlayer(p);
+        setQuests(q);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleClaimBonus = async () => {
+    try {
+      const result = await playerService.claimDailyBonus();
+      setPlayer((prev) =>
+        prev
+          ? {
+              ...prev,
+              stats: {
+                ...prev.stats,
+                gold: result.newGold,
+                xp: result.newXP,
+                level: result.newLevel,
+                dailyBonusClaimed: true,
+              },
+            }
+          : prev,
+      );
+      triggerToast(`Daily bonus claimed! +${result.xpAwarded} XP & +${result.goldAwarded} Gold!`);
+      if (result.leveled) {
+        setLevelUpModal({
+          open: true,
+          prev: result.newLevel - 1,
+          next: result.newLevel,
+        });
+      }
+    } catch (err: unknown) {
+      triggerToast(err instanceof Error ? err.message : 'Could not claim bonus');
+    }
   };
 
-  const handleQuestComplete = (completedQuest: Quest) => {
-    setPlayer((prev) => ({
-      ...prev,
-      stats: {
-        ...prev.stats,
-        xp: prev.stats.xp + completedQuest.reward.xp,
-        gold: prev.stats.gold + (completedQuest.reward.gold || 50),
-      },
-    }));
-    triggerToast(
-      `Quest Resolved: "${completedQuest.title}"! +${completedQuest.reward.xp} XP earned!`
+  const handleQuestComplete = async (quest: Quest) => {
+    try {
+      const result = await questService.resolveQuest(quest.id);
+      setQuests((prev) =>
+        prev.map((q) => (q.id === quest.id ? { ...q, status: 'completed' } : q)),
+      );
+      setPlayer((prev) =>
+        prev
+          ? {
+              ...prev,
+              stats: {
+                ...prev.stats,
+                xp: result.player.xp,
+                xpToNextLevel: result.player.xpToNextLevel,
+                level: result.player.level,
+                gold: result.player.gold,
+                rank: result.player.rank as PlayerProfile['stats']['rank'],
+              },
+            }
+          : prev,
+      );
+      triggerToast(
+        `Quest Resolved: "${quest.title}"! +${result.rewards.xp} XP & +${result.rewards.gold} Gold!`,
+      );
+      if (result.levelUp.leveled) {
+        setLevelUpModal({
+          open: true,
+          prev: result.levelUp.previousLevel,
+          next: result.levelUp.newLevel,
+        });
+      }
+    } catch (err: unknown) {
+      triggerToast(err instanceof Error ? err.message : 'Failed to resolve quest');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-4 border-[#7ef9c7] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-[#bccac1] font-bold text-sm uppercase tracking-wider">
+            Loading Saga...
+          </p>
+        </div>
+      </div>
     );
-  };
+  }
 
-  // Get active and side quests to display
-  const activeQuest = quests.find((q) => q.id === 'q-01') || quests[0];
-  const sideQuest = quests.find((q) => q.id === 'q-02') || quests[1];
+  if (!player) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-[#ff5a5a] font-bold">Failed to load player data.</p>
+      </div>
+    );
+  }
+
+  const activeQuest = quests.find((q) => q.status === 'active') ?? quests[0];
+  const sideQuest = quests.find((q) => q.category === 'side' && q.status === 'available') ?? quests[1];
 
   return (
     <div className="space-y-6">
+      {/* Level Up Modal */}
+      <LevelUpModal
+        isOpen={levelUpModal.open}
+        onClose={() => setLevelUpModal((s) => ({ ...s, open: false }))}
+        previousLevel={levelUpModal.prev}
+        newLevel={levelUpModal.next}
+      />
+
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-20 right-4 z-50 bg-[#7ef9c7] text-black font-black text-sm px-4 py-3 rounded-xl border-pixel-thick shadow-solid-lg flex items-center gap-2 animate-bounce">
@@ -63,16 +148,13 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Your Saga (6 cols) */}
         <div className="lg:col-span-6">
-          <HeroSagaCard
-            player={player}
-            onClaimDailyBonus={handleClaimBonus}
-          />
+          <HeroSagaCard player={player} onClaimDailyBonus={handleClaimBonus} />
         </div>
 
         {/* Right Column: Quest Column (6 cols) */}
         <div className="lg:col-span-6 flex flex-col gap-6">
-          <QuestCard quest={activeQuest} onAction={handleQuestComplete} />
-          <QuestCard quest={sideQuest} onAction={handleQuestComplete} />
+          {activeQuest && <QuestCard quest={activeQuest} onAction={handleQuestComplete} />}
+          {sideQuest && <QuestCard quest={sideQuest} onAction={handleQuestComplete} />}
         </div>
       </div>
 
