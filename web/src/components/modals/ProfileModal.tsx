@@ -22,7 +22,7 @@ const AVATAR_OPTIONS = [
 
 export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const router = useRouter();
-  const { player, refreshPlayer, playSfx, openSettings, t } = useGame();
+  const { player, updateAvatar, playSfx, openSettings, t } = useGame();
   const [updating, setUpdating] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -37,9 +37,8 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     if (index === currentAvatarIndex || updating) return;
     try {
       setUpdating(true);
-      await playerService.updateAvatar(index);
       playSfx('equip');
-      await refreshPlayer();
+      await updateAvatar(index);
       setToast('Avatar matrix synchronized!');
       setTimeout(() => setToast(null), 2500);
     } catch {

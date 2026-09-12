@@ -12,10 +12,10 @@ import type { PlayerProfile } from '@/types/player';
 import type { Quest } from '@/types/quest';
 
 export default function DashboardPage() {
-  const { playSfx, refreshPlayer, t } = useGame();
-  const [player, setPlayer] = useState<PlayerProfile | null>(null);
+  const { player: gamePlayer, playSfx, refreshPlayer, t } = useGame();
+  const [player, setPlayer] = useState<PlayerProfile | null>(gamePlayer);
   const [quests, setQuests] = useState<Quest[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!gamePlayer);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [levelUpModal, setLevelUpModal] = useState<{ open: boolean; prev: number; next: number }>({
     open: false,
@@ -27,6 +27,14 @@ export default function DashboardPage() {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
   };
+
+  // Sync with live GameContext player immediately whenever avatar or stats change
+  useEffect(() => {
+    if (gamePlayer) {
+      setPlayer(gamePlayer);
+      setLoading(false);
+    }
+  }, [gamePlayer]);
 
   useEffect(() => {
     Promise.all([playerService.getProfile(), questService.getQuests()])

@@ -17,7 +17,7 @@ export function HeroSagaCard({
   player,
   onClaimDailyBonus,
 }: HeroSagaCardProps) {
-  const { t } = useGame();
+  const { t, openProfile, playSfx } = useGame();
   const bonusClaimed = player.stats.dailyBonusClaimed;
   const percent = xpPercent(player.stats.xp, player.stats.xpToNextLevel);
 
@@ -46,10 +46,17 @@ export function HeroSagaCard({
         {/* Aura Backlight */}
         <div className="absolute w-72 h-72 bg-[#7d67bd] rounded-full blur-3xl opacity-70" />
 
-        {/* Character Avatar Showcase */}
-        <div className="relative w-64 h-80 border-4 border-black rounded-2xl overflow-hidden shadow-solid-lg bg-[#190c2d] -rotate-1 group transition-transform hover:rotate-0">
+        {/* Character Avatar Showcase — Click to open Profile & Avatar Dossier */}
+        <div
+          onClick={() => {
+            playSfx('click');
+            openProfile();
+          }}
+          title="Click to open Operative Dossier and change avatar"
+          className="relative w-64 h-80 border-4 border-black rounded-2xl overflow-hidden shadow-solid-lg bg-[#190c2d] -rotate-1 group transition-transform hover:rotate-0 hover:scale-[1.02] cursor-pointer"
+        >
           <Image
-            src={`/avatars/Avatar-${player.avatarIndex}.jpg`}
+            src={`/avatars/Avatar-${player.avatarIndex || 1}.jpg`}
             alt={player.username}
             fill
             className="object-cover object-top"
@@ -57,9 +64,9 @@ export function HeroSagaCard({
             sizes="(max-width: 768px) 100vw, 320px"
           />
           {/* Subtle Cyber Decal overlay */}
-          <div className="absolute bottom-2 left-2 right-2 bg-[#130728]/90 border-2 border-black rounded px-2 py-1 text-[10px] font-black uppercase text-[#7ef9c7] flex justify-between items-center">
+          <div className="absolute bottom-2 left-2 right-2 bg-[#130728]/90 border-2 border-black rounded px-2 py-1 text-[10px] font-black uppercase text-[#7ef9c7] flex justify-between items-center group-hover:bg-[#7ef9c7] group-hover:text-[#002115] transition-colors">
             <span>{player.stats.rank}</span>
-            <span className="text-[#ffb68d]">MK-IV</span>
+            <span className="text-[#ffb68d] group-hover:text-[#002115]">🎭 CHANGE AVATAR</span>
           </div>
         </div>
       </div>

@@ -38,6 +38,7 @@ interface GameContextType {
   showProfile: boolean;
   openProfile: () => void;
   closeProfile: () => void;
+  updateAvatar: (index: number) => Promise<void>;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -156,6 +157,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setShowProfile(false);
   }, []);
 
+  const updateAvatar = useCallback(async (index: number) => {
+    setPlayer((prev) => (prev ? { ...prev, avatarIndex: index } : prev));
+    await playerService.updateAvatar(index);
+    await refreshPlayer();
+  }, [refreshPlayer]);
+
   const t = DICTIONARIES[languageMode];
 
   return (
@@ -182,6 +189,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         showProfile,
         openProfile,
         closeProfile,
+        updateAvatar,
       }}
     >
       {children}
