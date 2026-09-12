@@ -3,8 +3,7 @@ import { GameProvider } from '@/contexts/GameContext';
 import { TopNav } from '@/components/layout/TopNav';
 import { Footer } from '@/components/layout/Footer';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
-import { TutorialModal } from '@/components/modals/TutorialModal';
-import { SettingsModal } from '@/components/modals/SettingsModal';
+import { AppModals } from '@/components/modals/AppModals';
 
 export default function AppLayout({
   children,
@@ -23,8 +22,7 @@ export default function AppLayout({
       </div>
 
       {/* Global Modals */}
-      <TutorialModal />
-      <SettingsModal />
+      <AppModals />
     </GameProvider>
   );
 }

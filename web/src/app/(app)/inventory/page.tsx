@@ -101,6 +101,23 @@ export default function InventoryPage() {
 
   return (
     <div className="space-y-4">
+      {/* Sub-header Title Banner */}
+      <div className="bg-[#201335] border-pixel-thick shadow-solid-lg rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-[#000000]">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="bg-[#b892ff] text-black font-black text-xs px-2.5 py-0.5 rounded border border-black uppercase shadow-solid-sm">
+              ARMORY • MATRIX
+            </span>
+            <h2 className="text-xl sm:text-2xl font-black text-white uppercase font-heading tracking-tight">
+              {t.inventoryTitle}
+            </h2>
+          </div>
+          <p className="text-xs text-[#bccac1] font-semibold mt-1">
+            {t.inventorySubtitle}
+          </p>
+        </div>
+      </div>
+
       {/* Sub-bar Status Header */}
       <div className="bg-[#130728] border-2 border-black py-2 px-4 rounded-xl flex flex-wrap justify-between items-center text-xs text-[#bccac1]">
         <div className="flex items-center gap-2">

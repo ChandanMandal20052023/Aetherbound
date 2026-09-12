@@ -5,6 +5,8 @@ import Image from 'next/image';
 import type { PlayerProfile } from '@/types/player';
 import { xpPercent } from '@/lib/utils';
 
+import { useGame } from '@/contexts/GameContext';
+
 interface HeroSagaCardProps {
   player: PlayerProfile;
   onClaimDailyBonus?: () => void;
@@ -15,14 +17,12 @@ export function HeroSagaCard({
   player,
   onClaimDailyBonus,
 }: HeroSagaCardProps) {
-  const [bonusClaimed, setBonusClaimed] = useState(
-    player.stats.dailyBonusClaimed
-  );
+  const { t } = useGame();
+  const bonusClaimed = player.stats.dailyBonusClaimed;
   const percent = xpPercent(player.stats.xp, player.stats.xpToNextLevel);
 
   const handleClaimBonus = () => {
-    setBonusClaimed(true);
-    if (onClaimDailyBonus) onClaimDailyBonus();
+    if (onClaimDailyBonus && !bonusClaimed) onClaimDailyBonus();
   };
 
   return (
@@ -126,8 +126,8 @@ export function HeroSagaCard({
             <span className="w-4 h-4 rounded-full bg-black text-[#7ef9c7] flex items-center justify-center text-[10px] font-black shrink-0">
               {bonusClaimed ? '✓' : '!'}
             </span>
-            <span className="font-black text-[10px] leading-tight text-left">
-              {bonusClaimed ? 'Bonus Claimed' : 'Claim Daily +50'}
+            <span className="font-black text-[10px] leading-tight text-left uppercase">
+              {bonusClaimed ? t.claimedBonusButton : 'Claim Daily +50'}
             </span>
           </button>
         </div>

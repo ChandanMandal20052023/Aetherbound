@@ -124,6 +124,23 @@ export default function NetworkPage() {
 
   return (
     <div className="space-y-6">
+      {/* Sub-header Title Banner */}
+      <div className="bg-[#201335] border-pixel-thick shadow-solid-lg rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-[#000000]">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="bg-[#ffb68d] text-black font-black text-xs px-2.5 py-0.5 rounded border border-black uppercase shadow-solid-sm">
+              NETWORK • ALLIANCES
+            </span>
+            <h2 className="text-xl sm:text-2xl font-black text-white uppercase font-heading tracking-tight">
+              {t.networkTitle}
+            </h2>
+          </div>
+          <p className="text-xs text-[#bccac1] font-semibold mt-1">
+            {t.networkSubtitle}
+          </p>
+        </div>
+      </div>
+
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-20 right-4 z-50 bg-[#7ef9c7] text-black font-black text-sm px-4 py-3 rounded-xl border-pixel-thick shadow-solid-lg flex items-center gap-2 animate-bounce">
