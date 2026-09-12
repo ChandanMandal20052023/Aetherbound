@@ -149,14 +149,6 @@ export function TutorialModal() {
               />
             ))}
           </div>
-
-          <button
-            type="button"
-            onClick={handleSkip}
-            className="text-xs text-[#bccac1] hover:text-white font-black underline uppercase cursor-pointer"
-          >
-            Skip Guide ✕
-          </button>
         </div>
 
         {/* Main Content Card */}
@@ -213,7 +205,7 @@ export function TutorialModal() {
               variant="outline"
               size="sm"
               onClick={handleSkip}
-              className="hidden sm:inline-flex text-xs"
+              className="inline-flex text-xs"
             >
               SKIP TUTORIAL
             </Button>
