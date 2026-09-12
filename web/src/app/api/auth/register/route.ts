@@ -3,9 +3,8 @@ import bcrypt from 'bcrypt';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { signAndSetCookie } from '@/lib/auth';
-import { xpRequired, rankForLevel, STARTER_GOLD, STARTER_XP } from '@/lib/progression';
+import { xpRequired, STARTER_GOLD, STARTER_XP, questXpReward, questGoldReward } from '@/lib/progression';
 import { STARTER_QUESTS, STARTER_INVENTORY, SHOP_CATALOG } from '@/lib/seed-data';
-import { questXpReward, questGoldReward } from '@/lib/progression';
 
 const RegisterSchema = z.object({
   username: z.string().min(3).max(24).regex(/^[a-zA-Z0-9_]+$/, 'Username must be alphanumeric'),
