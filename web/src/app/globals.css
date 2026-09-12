@@ -1,0 +1,138 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-base: #190c2d;
+    --bg-gradient-end: #2b1b4a;
+    --surface-deep: #130728;
+    --surface-card: #201335;
+    --surface-card-alt: #2a174a;
+    --surface-hero: #351c5e;
+    --mint: #7ef9c7;
+    --mint-dark: #007353;
+    --peach: #ffb68d;
+    --peach-dark: #6e3816;
+    --lavender: #b892ff;
+    --gold: #fad02c;
+    --cyan: #70c5ff;
+    --red: #ff5a5a;
+    --text-primary: #ebdcff;
+    --text-muted: #bccac1;
+    --border-black: #000000;
+  }
+
+  body {
+    background-color: var(--bg-base);
+    background-image: 
+      linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+    color: #ebdcff;
+    font-family: var(--font-jakarta), system-ui, sans-serif;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-heading {
+    font-family: var(--font-rubik), system-ui, sans-serif;
+  }
+}
+
+/* Neo-Brutalist Pop-Anime Shadows */
+.shadow-solid {
+  box-shadow: 4px 4px 0px #000000;
+}
+
+.shadow-solid-sm {
+  box-shadow: 2px 2px 0px #000000;
+}
+
+.shadow-solid-lg {
+  box-shadow: 6px 6px 0px #000000;
+}
+
+.shadow-solid-mint {
+  box-shadow: 4px 4px 0px #7ef9c7;
+}
+
+.shadow-solid-peach {
+  box-shadow: 4px 4px 0px #ffb68d;
+}
+
+.shadow-solid-gold {
+  box-shadow: 4px 4px 0px #fad02c;
+}
+
+/* Neo-Brutalist Outlines */
+.border-pixel {
+  border: 3px solid #000000;
+}
+
+.border-pixel-thick {
+  border: 4px solid #000000;
+}
+
+/* Interactive Click / Tap Effect */
+.btn-press {
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.btn-press:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0px #000000;
+}
+
+.btn-press:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0px 0px 0px #000000;
+}
+
+/* Physical Decal / Tape Tilt */
+.tilt-left {
+  transform: rotate(-1.5deg);
+}
+
+.tilt-right {
+  transform: rotate(1.5deg);
+}
+
+.tilt-subtle {
+  transform: rotate(-0.75deg);
+}
+
+/* Diagonal Stripes for Level/XP Bars */
+.bg-stripes-mint {
+  background-image: repeating-linear-gradient(
+    45deg,
+    #7ef9c7,
+    #7ef9c7 10px,
+    #68e8b4 10px,
+    #68e8b4 20px
+  );
+}
+
+.bg-stripes-peach {
+  background-image: repeating-linear-gradient(
+    45deg,
+    #ffb68d,
+    #ffb68d 10px,
+    #f59b6c 10px,
+    #f59b6c 20px
+  );
+}
+
+/* Material Symbols alignment */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
