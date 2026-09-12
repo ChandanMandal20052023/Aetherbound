@@ -39,6 +39,14 @@ interface GameContextType {
   openProfile: () => void;
   closeProfile: () => void;
   updateAvatar: (index: number) => Promise<void>;
+
+  // Legal / Lore Modals
+  showTerms: boolean;
+  openTerms: () => void;
+  closeTerms: () => void;
+  showCode: boolean;
+  openCode: () => void;
+  closeCode: () => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -58,6 +66,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const [showTutorial, setShowTutorial] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [showCode, setShowCode] = useState(false);
 
   // Load player profile
   const refreshPlayer = useCallback(async () => {
@@ -157,6 +167,26 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setShowProfile(false);
   }, []);
 
+  const openTerms = useCallback(() => {
+    sound.play('click');
+    setShowTerms(true);
+  }, []);
+
+  const closeTerms = useCallback(() => {
+    sound.play('click');
+    setShowTerms(false);
+  }, []);
+
+  const openCode = useCallback(() => {
+    sound.play('click');
+    setShowCode(true);
+  }, []);
+
+  const closeCode = useCallback(() => {
+    sound.play('click');
+    setShowCode(false);
+  }, []);
+
   const updateAvatar = useCallback(async (index: number) => {
     setPlayer((prev) => (prev ? { ...prev, avatarIndex: index } : prev));
     await playerService.updateAvatar(index);
@@ -190,6 +220,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         openProfile,
         closeProfile,
         updateAvatar,
+        showTerms,
+        openTerms,
+        closeTerms,
+        showCode,
+        openCode,
+        closeCode,
       }}
     >
       {children}

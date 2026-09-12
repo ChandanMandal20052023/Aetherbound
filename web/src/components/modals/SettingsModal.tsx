@@ -10,16 +10,18 @@ import { authService } from '@/services/auth.service';
 export function SettingsModal() {
   const router = useRouter();
   const {
-    showSettings,
-    closeSettings,
-    languageMode,
-    setLanguageMode,
     soundEnabled,
-    toggleSound,
     soundVolume,
+    toggleSound,
     setVolume,
     playSfx,
+    languageMode,
+    setLanguageMode,
+    showSettings,
+    closeSettings,
     openTutorial,
+    openTerms,
+    openCode,
     player,
   } = useGame();
 
@@ -192,6 +194,31 @@ export function SettingsModal() {
               className="text-xs whitespace-nowrap"
             >
               REPLAY GUIDE 🚀
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                closeSettings();
+                openTerms();
+              }}
+              className="text-[11px] font-black uppercase text-left justify-start"
+            >
+              📜 TERMS OF TRIAL
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                closeSettings();
+                openCode();
+              }}
+              className="text-[11px] font-black uppercase text-left justify-start"
+            >
+              🌌 THE AETHER CODE
             </Button>
           </div>
         </div>

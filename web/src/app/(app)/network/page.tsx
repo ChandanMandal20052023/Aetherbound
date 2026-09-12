@@ -59,16 +59,31 @@ const INITIAL_OPERATIVES: Operative[] = [
 
 export default function NetworkPage() {
   const { player, playSfx, t } = useGame();
-  const [operatives, setOperatives] = useState(INITIAL_OPERATIVES);
+  const [operatives, setOperatives] = useState<Operative[]>(INITIAL_OPERATIVES);
   const [loadingOperatives, setLoadingOperatives] = useState(true);
+  const [joinedRaid, setJoinedRaid] = useState(false);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedJoined = localStorage.getItem('aether_joined_raid') === 'true';
+      setJoinedRaid(savedJoined);
+    }
+
     fetch('/api/network/operatives')
       .then((r) => r.json())
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) setOperatives(data);
+        if (Array.isArray(data) && data.length > 0) {
+          setOperatives((prev) => {
+            // retain pinged status if already pinged in local session
+            const pingedIds = new Set(prev.filter((p) => p.pinged).map((p) => p.id));
+            return data.map((op: Operative) => ({
+              ...op,
+              pinged: pingedIds.has(op.id),
+            }));
+          });
+        }
       })
-      .catch(() => {/* fallback to INITIAL_OPERATIVES already set */})
+      .catch(() => {/* fallback to INITIAL_OPERATIVES */})
       .finally(() => setLoadingOperatives(false));
   }, []);
 
@@ -95,13 +110,71 @@ export default function NetworkPage() {
   const [newBroadcast, setNewBroadcast] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  const triggerToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const handleJoinRaid = () => {
+    if (joinedRaid) {
+      playSfx('click');
+      triggerToast('Already synchronized with the Chrono Siphon Raid Squad!');
+      return;
+    }
+
+    playSfx('questComplete');
+    setJoinedRaid(true);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('aether_joined_raid', 'true');
+    }
+
+    triggerToast('Joined Chrono Siphon Raid Squad! +400 Raid XP allocated.');
+
+    const myName = player?.username ?? 'Operative';
+    setTransmissions((prev) => [
+      {
+        id: `t-${Date.now()}`,
+        sender: `${myName} (You)`,
+        message: 'Synchronized frequency with Moonfall Vanguard! Ready for boss encounter.',
+        time: 'Just now',
+      },
+      ...prev,
+    ]);
+  };
+
   const handlePing = (id: string, name: string) => {
     playSfx('click');
     setOperatives((prev) =>
       prev.map((op) => (op.id === id ? { ...op, pinged: true } : op))
     );
-    setToastMessage(`Aether ping dispatched to ${name}!`);
-    setTimeout(() => setToastMessage(null), 3000);
+    triggerToast(`Aether ping dispatched to ${name}!`);
+
+    // Simulated realistic tactical radio response
+    setTimeout(() => {
+      playSfx('dailyBonus');
+      triggerToast(`Incoming transmission from ${name}!`);
+
+      let replyMsg = 'Aether ping confirmed! Standing by for joint sector sweep.';
+      if (name.includes('Kaelen')) {
+        replyMsg = 'Ping acknowledged, operative! Locking down Sector 4 hydras with you.';
+      } else if (name.includes('Lyra')) {
+        replyMsg = 'Signal received loud and clear! Infusing your focus bar with starlight essence.';
+      } else if (name.includes('Darius')) {
+        replyMsg = 'Hah! Solid ping. Vanguard line is holding firm. Push forward!';
+      } else if (name.includes('Sylvia')) {
+        replyMsg = 'Temporal frequency aligned. Time dilation active for your next quest session.';
+      }
+
+      setTransmissions((prev) => [
+        {
+          id: `t-reply-${Date.now()}`,
+          sender: name,
+          message: replyMsg,
+          time: 'Just now',
+        },
+        ...prev,
+      ]);
+    }, 1400);
   };
 
   const handleSendBroadcast = (e: React.FormEvent) => {
@@ -110,16 +183,40 @@ export default function NetworkPage() {
 
     playSfx('dailyBonus');
     const myName = player?.username ?? 'Operative';
-    setTransmissions([
+    const broadcastMsg = newBroadcast;
+    setNewBroadcast('');
+
+    setTransmissions((prev) => [
       {
         id: `t-${Date.now()}`,
         sender: `${myName} (You)`,
-        message: newBroadcast,
+        message: broadcastMsg,
         time: 'Just now',
       },
-      ...transmissions,
+      ...prev,
     ]);
-    setNewBroadcast('');
+
+    triggerToast('Broadcast transmitted to all guild channels!');
+
+    // Squad automated chatter response
+    setTimeout(() => {
+      playSfx('click');
+      const allies = [
+        { name: 'Commander Varyn', msg: `Transmission acknowledged, ${myName}. Vanguard frequency locked.` },
+        { name: 'Lyra Moonwhisper', msg: `Copy that! Echoing your broadcast across the secondary beacon.` },
+        { name: 'Kaelen Vance', msg: `Solid intel, ${myName}. Keep the streak intact!` }
+      ];
+      const randomAlly = allies[Math.floor(Math.random() * allies.length)];
+      setTransmissions((prev) => [
+        {
+          id: `t-echo-${Date.now()}`,
+          sender: randomAlly.name,
+          message: randomAlly.msg,
+          time: 'Just now',
+        },
+        ...prev,
+      ]);
+    }, 1600);
   };
 
   return (
@@ -184,28 +281,25 @@ export default function NetworkPage() {
           </p>
           <div className="flex items-center gap-3 pt-2">
             <span className="bg-[#130728] text-[#7ef9c7] text-xs font-black px-3 py-1 rounded border border-black uppercase">
-              RAID PROGRESS: 74%
+              RAID PROGRESS: {joinedRaid ? '76%' : '74%'}
             </span>
             <span className="bg-[#ffb68d] text-black text-xs font-black px-3 py-1 rounded border border-black uppercase">
-              PARTY SIZE: 8/10
+              PARTY SIZE: {joinedRaid ? '9/10 (YOU JOINED)' : '8/10'}
             </span>
           </div>
         </div>
 
         <div className="shrink-0 flex flex-col items-center gap-2">
           <Button
-            variant="gold"
+            variant={joinedRaid ? 'primary' : 'gold'}
             size="lg"
-            onClick={() => {
-              setToastMessage('Joined Chrono Siphon Raid Squad!');
-              setTimeout(() => setToastMessage(null), 3000);
-            }}
-            withArrow
+            onClick={handleJoinRaid}
+            withArrow={!joinedRaid}
           >
-            JOIN CO-OP RAID
+            {joinedRaid ? '✓ IN RAID SQUAD' : 'JOIN CO-OP RAID'}
           </Button>
           <span className="text-[11px] text-[#ebdcff] font-mono font-bold">
-            Bonus Reward: +400 XP + Guild Relic
+            {joinedRaid ? 'Active buff: +400 XP Multiplier Applied' : 'Bonus Reward: +400 XP + Guild Relic'}
           </span>
         </div>
       </div>

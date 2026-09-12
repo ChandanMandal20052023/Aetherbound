@@ -1,7 +1,24 @@
+'use client';
+
 import React from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useGame } from '@/contexts/GameContext';
+import { authService } from '@/services/auth.service';
 
 export function Footer() {
+  const router = useRouter();
+  const { openTerms, openCode, playSfx } = useGame();
+
+  const handleExit = async () => {
+    try {
+      playSfx('click');
+      await authService.logout();
+      router.push('/login');
+    } catch {
+      router.push('/login');
+    }
+  };
+
   return (
     <footer className="mt-12 py-6 border-t-2 border-black/50 bg-[#160b24]/80 text-xs text-[#bccac1]">
       <div className="max-w-[1240px] mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -11,16 +28,28 @@ export function Footer() {
           <span className="text-[#86948c]">•</span>
           <span>CYCLE 3 : MOONFALL</span>
         </div>
-        <div className="flex items-center gap-6 font-bold uppercase">
-          <Link href="/dashboard" className="hover:text-[#7ef9c7] transition-colors">
+        <div className="flex items-center gap-6 font-bold uppercase tracking-wider">
+          <button
+            type="button"
+            onClick={openTerms}
+            className="hover:text-[#7ef9c7] transition-colors focus:outline-none cursor-pointer underline-offset-4 hover:underline"
+          >
             Terms of Trial
-          </Link>
-          <Link href="/dashboard" className="hover:text-[#7ef9c7] transition-colors">
+          </button>
+          <button
+            type="button"
+            onClick={openCode}
+            className="hover:text-[#7ef9c7] transition-colors focus:outline-none cursor-pointer underline-offset-4 hover:underline"
+          >
             Aether Code
-          </Link>
-          <Link href="/login" className="hover:text-[#ffb68d] transition-colors">
+          </button>
+          <button
+            type="button"
+            onClick={handleExit}
+            className="hover:text-[#ffb68d] transition-colors focus:outline-none cursor-pointer underline-offset-4 hover:underline"
+          >
             Exit Portal
-          </Link>
+          </button>
         </div>
       </div>
     </footer>
