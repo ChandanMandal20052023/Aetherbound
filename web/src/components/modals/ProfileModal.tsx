@@ -22,7 +22,7 @@ const AVATAR_OPTIONS = [
 
 export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const router = useRouter();
-  const { player, updateAvatar, playSfx, openSettings, t } = useGame();
+  const { player, updateAvatar, playSfx, openSettings, openBattleCard, t } = useGame();
   const [updating, setUpdating] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -216,14 +216,28 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
         {/* Modal Actions Footer */}
         <div className="pt-2 border-t-2 border-[#362354] flex items-center justify-between gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleOpenSettings}
-            className="text-xs"
-          >
-            ⚙️ SETTINGS
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="gold"
+              size="sm"
+              onClick={() => {
+                playSfx('click');
+                onClose();
+                openBattleCard();
+              }}
+              className="text-xs font-black uppercase"
+            >
+              🎴 BATTLE CARD
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleOpenSettings}
+              className="text-xs"
+            >
+              ⚙️ SETTINGS
+            </Button>
+          </div>
 
           <div className="flex items-center gap-2">
             <Button

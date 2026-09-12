@@ -12,12 +12,20 @@ export type SfxType =
   | 'unequip'
   | 'dailyBonus'
   | 'toggle'
+  | 'focusTick'
   | 'error';
 
 class SoundController {
   private ctx: AudioContext | null = null;
   private enabled: boolean = true;
   private volume: number = 0.5;
+
+  // Ambient Drone Nodes
+  private droneGain: GainNode | null = null;
+  private droneOsc1: OscillatorNode | null = null;
+  private droneOsc2: OscillatorNode | null = null;
+  private droneFilter: BiquadFilterNode | null = null;
+  private droneActive: boolean = false;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -216,6 +224,22 @@ class SoundController {
           break;
         }
 
+        case 'focusTick': {
+          // Minimalist mechanical watch escapement pulse
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(1200, now);
+          osc.frequency.exponentialRampToValueAtTime(300, now + 0.015);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.015);
+          osc.connect(gain);
+          gain.connect(masterGain);
+          osc.start(now);
+          osc.stop(now + 0.015);
+          break;
+        }
+
         case 'error': {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
@@ -233,6 +257,95 @@ class SoundController {
       }
     } catch {
       // AudioContext failure (autoplay policy or disabled audio) — silent fail
+    }
+  }
+
+  // ─── Ambient Focus Drone (Synthesized in Real-Time) ─────────────────────────
+
+  public isDroneActive(): boolean {
+    return this.droneActive;
+  }
+
+  public startAmbientDrone() {
+    if (this.droneActive || !this.enabled) return;
+
+    try {
+      const ctx = this.getAudioContext();
+      if (!ctx) return;
+
+      const now = ctx.currentTime;
+
+      // Filter: warm low-pass cut
+      this.droneFilter = ctx.createBiquadFilter();
+      this.droneFilter.type = 'lowpass';
+      this.droneFilter.frequency.setValueAtTime(240, now);
+
+      // Gain with smooth fade in
+      this.droneGain = ctx.createGain();
+      this.droneGain.gain.setValueAtTime(0.001, now);
+      this.droneGain.gain.exponentialRampToValueAtTime(Math.min(0.2, this.volume * 0.18), now + 2.0);
+
+      // Detuned dual oscillators (Root 110Hz + Fifth 164.8Hz + slight detune)
+      this.droneOsc1 = ctx.createOscillator();
+      this.droneOsc1.type = 'sine';
+      this.droneOsc1.frequency.setValueAtTime(110, now); // A2
+
+      this.droneOsc2 = ctx.createOscillator();
+      this.droneOsc2.type = 'triangle';
+      this.droneOsc2.frequency.setValueAtTime(164.8, now); // E3 fifth
+      this.droneOsc2.detune.setValueAtTime(4, now); // slight chorus shimmer
+
+      this.droneOsc1.connect(this.droneFilter);
+      this.droneOsc2.connect(this.droneFilter);
+      this.droneFilter.connect(this.droneGain);
+      this.droneGain.connect(ctx.destination);
+
+      this.droneOsc1.start(now);
+      this.droneOsc2.start(now);
+      this.droneActive = true;
+    } catch {
+      this.droneActive = false;
+    }
+  }
+
+  public stopAmbientDrone() {
+    if (!this.droneActive) return;
+
+    try {
+      const ctx = this.ctx;
+      if (ctx && this.droneGain) {
+        const now = ctx.currentTime;
+        this.droneGain.gain.linearRampToValueAtTime(0.0001, now + 0.8);
+        setTimeout(() => {
+          try {
+            this.droneOsc1?.stop();
+            this.droneOsc2?.stop();
+            this.droneOsc1?.disconnect();
+            this.droneOsc2?.disconnect();
+            this.droneFilter?.disconnect();
+            this.droneGain?.disconnect();
+          } catch {}
+          this.droneOsc1 = null;
+          this.droneOsc2 = null;
+          this.droneFilter = null;
+          this.droneGain = null;
+          this.droneActive = false;
+        }, 850);
+      } else {
+        this.droneActive = false;
+      }
+    } catch {
+      this.droneActive = false;
+    }
+  }
+
+  public toggleAmbientDrone(): boolean {
+    if (this.droneActive) {
+      this.stopAmbientDrone();
+      return false;
+    } else {
+      this.startAmbientDrone();
+      return true;
     }
   }
 }

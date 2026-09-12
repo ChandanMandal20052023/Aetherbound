@@ -18,7 +18,7 @@ export function QuestBoard({
   initialQuests,
   onQuestComplete,
 }: QuestBoardProps) {
-  const { playSfx, refreshPlayer, t } = useGame();
+  const { playSfx, refreshPlayer, openAlchemist, openFocusChamber, t } = useGame();
   const [quests, setQuests] = useState<Quest[]>(initialQuests);
   const [selectedCategory, setSelectedCategory] = useState<
     'all' | QuestCategory | 'completed'
@@ -132,7 +132,23 @@ export function QuestBoard({
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Button
+            variant="gold"
+            size="md"
+            onClick={openAlchemist}
+            className="font-black"
+          >
+            ⚡ AI ALCHEMIST
+          </Button>
+          <Button
+            variant="lavender"
+            size="md"
+            onClick={openFocusChamber}
+            className="font-black"
+          >
+            ⏳ FOCUS CRUCIBLE
+          </Button>
           <Button
             variant="primary"
             size="md"
@@ -141,14 +157,6 @@ export function QuestBoard({
           >
             {t.createQuest}
           </Button>
-          <button
-            type="button"
-            onClick={() => setShowErrorState(true)}
-            className="p-2.5 bg-[#25193a] hover:bg-[#351c5e] border-2 border-black rounded-lg text-xs font-black text-[#ffb68d] shadow-solid-sm transition-all"
-            title="Simulate Error State"
-          >
-            ⚠️
-          </button>
         </div>
       </div>
 

@@ -7,9 +7,25 @@ import { SettingsModal } from '@/components/modals/SettingsModal';
 import { ProfileModal } from '@/components/modals/ProfileModal';
 import { TermsModal } from '@/components/modals/TermsModal';
 import { CodeModal } from '@/components/modals/CodeModal';
+import { QuestAlchemistModal } from '@/components/modals/QuestAlchemistModal';
+import { FocusChamberModal } from '@/components/modals/FocusChamberModal';
+import { BattleCardModal } from '@/components/modals/BattleCardModal';
 
 export function AppModals() {
-  const { showProfile, closeProfile, showTerms, closeTerms, showCode, closeCode } = useGame();
+  const {
+    showProfile,
+    closeProfile,
+    showTerms,
+    closeTerms,
+    showCode,
+    closeCode,
+    showAlchemist,
+    closeAlchemist,
+    showFocusChamber,
+    closeFocusChamber,
+    showBattleCard,
+    closeBattleCard,
+  } = useGame();
 
   return (
     <>
@@ -18,6 +34,9 @@ export function AppModals() {
       <ProfileModal isOpen={showProfile} onClose={closeProfile} />
       <TermsModal isOpen={showTerms} onClose={closeTerms} />
       <CodeModal isOpen={showCode} onClose={closeCode} />
+      <QuestAlchemistModal isOpen={showAlchemist} onClose={closeAlchemist} />
+      <FocusChamberModal isOpen={showFocusChamber} onClose={closeFocusChamber} />
+      <BattleCardModal isOpen={showBattleCard} onClose={closeBattleCard} />
     </>
   );
 }

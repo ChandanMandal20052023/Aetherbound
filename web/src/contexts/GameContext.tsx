@@ -47,6 +47,21 @@ interface GameContextType {
   showCode: boolean;
   openCode: () => void;
   closeCode: () => void;
+
+  // AI Quest Alchemist
+  showAlchemist: boolean;
+  openAlchemist: () => void;
+  closeAlchemist: () => void;
+
+  // Chrono Focus Chamber (Pomodoro Boss Run)
+  showFocusChamber: boolean;
+  openFocusChamber: () => void;
+  closeFocusChamber: () => void;
+
+  // Operative Battle Card (Dossier Flex)
+  showBattleCard: boolean;
+  openBattleCard: () => void;
+  closeBattleCard: () => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -68,6 +83,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const [showProfile, setShowProfile] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [showCode, setShowCode] = useState(false);
+  const [showAlchemist, setShowAlchemist] = useState(false);
+  const [showFocusChamber, setShowFocusChamber] = useState(false);
+  const [showBattleCard, setShowBattleCard] = useState(false);
 
   // Load player profile
   const refreshPlayer = useCallback(async () => {
@@ -187,6 +205,36 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setShowCode(false);
   }, []);
 
+  const openAlchemist = useCallback(() => {
+    sound.play('click');
+    setShowAlchemist(true);
+  }, []);
+
+  const closeAlchemist = useCallback(() => {
+    sound.play('click');
+    setShowAlchemist(false);
+  }, []);
+
+  const openFocusChamber = useCallback(() => {
+    sound.play('click');
+    setShowFocusChamber(true);
+  }, []);
+
+  const closeFocusChamber = useCallback(() => {
+    sound.play('click');
+    setShowFocusChamber(false);
+  }, []);
+
+  const openBattleCard = useCallback(() => {
+    sound.play('click');
+    setShowBattleCard(true);
+  }, []);
+
+  const closeBattleCard = useCallback(() => {
+    sound.play('click');
+    setShowBattleCard(false);
+  }, []);
+
   const updateAvatar = useCallback(async (index: number) => {
     setPlayer((prev) => (prev ? { ...prev, avatarIndex: index } : prev));
     await playerService.updateAvatar(index);
@@ -226,6 +274,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         showCode,
         openCode,
         closeCode,
+        showAlchemist,
+        openAlchemist,
+        closeAlchemist,
+        showFocusChamber,
+        openFocusChamber,
+        closeFocusChamber,
+        showBattleCard,
+        openBattleCard,
+        closeBattleCard,
       }}
     >
       {children}
