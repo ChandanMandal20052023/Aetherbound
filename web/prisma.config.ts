@@ -1,8 +1,7 @@
-/**
- * Prisma 7 config — datasource URL goes here (not in schema.prisma)
- * Dev:  DATABASE_URL="file:./dev.db"      (SQLite, zero setup)
- * Prod: DATABASE_URL="postgresql://..."   (Neon free tier on Vercel)
- */
+import { config } from 'dotenv';
+config({ path: '.env.local' });
+config({ path: '.env' });
+
 import { defineConfig } from 'prisma/config';
 
 export default defineConfig({
