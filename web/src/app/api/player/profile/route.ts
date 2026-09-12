@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { verifySession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { rankForLevel } from '@/lib/progression';
@@ -126,4 +126,29 @@ export async function GET() {
   };
 
   return NextResponse.json(profile);
+}
+
+export async function PATCH(req: NextRequest) {
+  const session = await verifySession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const body = await req.json();
+    const { avatarIndex } = body;
+
+    if (avatarIndex !== undefined) {
+      const idx = Math.max(1, Math.min(5, Number(avatarIndex)));
+      const updated = await prisma.user.update({
+        where: { id: session.userId },
+        data: { avatarIndex: idx },
+      });
+      return NextResponse.json({ success: true, avatarIndex: updated.avatarIndex });
+    }
+
+    return NextResponse.json({ error: 'No fields provided to update' }, { status: 400 });
+  } catch {
+    return NextResponse.json({ error: 'Invalid update payload' }, { status: 400 });
+  }
 }

@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useGame } from '@/contexts/GameContext';
-import { LANGUAGE_LABELS } from '@/lib/dictionary';
 
 export function TopNav() {
   const pathname = usePathname();
@@ -14,8 +13,8 @@ export function TopNav() {
     player,
     soundEnabled,
     toggleSound,
-    languageMode,
     openSettings,
+    openProfile,
     playSfx,
     t,
   } = useGame();
@@ -27,8 +26,6 @@ export function TopNav() {
     { label: t.shopTitle.split(' ')[0], href: '/shop' },
     { label: t.networkTitle.split(' ')[0], href: '/network' },
   ];
-
-  const currentLang = LANGUAGE_LABELS[languageMode];
 
   return (
     <header className="bg-[#1c122f] border-pixel-thick shadow-solid rounded-xl px-4 md:px-6 py-3 flex flex-wrap items-center justify-between gap-3 sticky top-4 z-40 border-[#000000]">
@@ -102,19 +99,6 @@ export function TopNav() {
           {soundEnabled ? '🔊' : '🔇'}
         </button>
 
-        {/* Language Complexity Badge (Click to open Settings) */}
-        <button
-          type="button"
-          onClick={openSettings}
-          title={`Current Language Mode: ${currentLang.name} (Click to change)`}
-          className="hidden sm:flex items-center gap-1.5 bg-[#2a1745] hover:bg-[#39215c] text-white border-2 border-black rounded-lg px-2.5 py-1 text-xs font-black shadow-solid-sm transition-colors cursor-pointer"
-        >
-          <span>{currentLang.icon}</span>
-          <span className="text-[11px] uppercase font-bold text-[#7ef9c7]">
-            {currentLang.name.split(' ')[0]}
-          </span>
-        </button>
-
         {/* Streak Pill */}
         <div
           title={`${player?.stats?.streakDays ?? 0} days streak`}
@@ -143,11 +127,12 @@ export function TopNav() {
           ⚙️
         </button>
 
-        {/* Player Profile & Level */}
-        <Link
-          href="/dashboard"
-          onClick={() => playSfx('click')}
-          className="flex items-center gap-2 bg-[#25193a] hover:bg-[#302445] border-2 border-black rounded-lg p-1 pr-2.5 shadow-solid-sm transition-colors"
+        {/* Player Profile & Avatar Selector Dossier Button */}
+        <button
+          type="button"
+          onClick={openProfile}
+          title="Open Operative Dossier & Avatar Selector"
+          className="flex items-center gap-2 bg-[#25193a] hover:bg-[#302445] border-2 border-black rounded-lg p-1 pr-2.5 shadow-solid-sm transition-colors cursor-pointer text-left"
         >
           <div className="w-7 h-7 rounded-md border border-black overflow-hidden relative bg-[#130728] shrink-0">
             <Image
@@ -166,7 +151,7 @@ export function TopNav() {
               {player?.username?.split('_')[0] ?? 'Hero'}
             </span>
           </div>
-        </Link>
+        </button>
       </div>
     </header>
   );

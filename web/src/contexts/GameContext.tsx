@@ -33,6 +33,11 @@ interface GameContextType {
   showSettings: boolean;
   openSettings: () => void;
   closeSettings: () => void;
+
+  // Profile Modal (Avatar selector & character dossier)
+  showProfile: boolean;
+  openProfile: () => void;
+  closeProfile: () => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -51,6 +56,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   // Modals
   const [showTutorial, setShowTutorial] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   // Load player profile
   const refreshPlayer = useCallback(async () => {
@@ -140,6 +146,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setShowSettings(false);
   }, []);
 
+  const openProfile = useCallback(() => {
+    sound.play('click');
+    setShowProfile(true);
+  }, []);
+
+  const closeProfile = useCallback(() => {
+    sound.play('click');
+    setShowProfile(false);
+  }, []);
+
   const t = DICTIONARIES[languageMode];
 
   return (
@@ -163,6 +179,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         showSettings,
         openSettings,
         closeSettings,
+        showProfile,
+        openProfile,
+        closeProfile,
       }}
     >
       {children}

@@ -23,4 +23,17 @@ export const playerService = {
     }
     return res.json();
   },
+
+  async updateAvatar(avatarIndex: number): Promise<{ success: boolean; avatarIndex: number }> {
+    const res = await fetch('/api/player/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ avatarIndex }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error ?? 'Failed to update avatar');
+    }
+    return res.json();
+  },
 };
