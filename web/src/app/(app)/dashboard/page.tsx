@@ -6,6 +6,7 @@ import { HeroSagaCard } from '@/components/dashboard/HeroSagaCard';
 import { QuestCard } from '@/components/dashboard/QuestCard';
 import { MomentumStreak } from '@/components/dashboard/MomentumStreak';
 import { LevelUpModal } from '@/components/modals/LevelUpModal';
+import { ForgeQuestModal } from '@/components/modals/ForgeQuestModal';
 import { playerService } from '@/services/player.service';
 import { questService } from '@/services/quest.service';
 import type { PlayerProfile } from '@/types/player';
@@ -23,6 +24,7 @@ export default function DashboardPage() {
   const [quests, setQuests] = useState<Quest[]>([]);
   const [loading, setLoading] = useState(!gamePlayer);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isForgeModalOpen, setIsForgeModalOpen] = useState(false);
   const [levelUpModal, setLevelUpModal] = useState<{ open: boolean; prev: number; next: number }>({
     open: false,
     prev: 1,
@@ -31,7 +33,12 @@ export default function DashboardPage() {
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  const handleQuestForged = (newQuest: Quest) => {
+    setQuests((prev) => [newQuest, ...prev]);
+    triggerToast(`[SYSTEM] Quest forged.\n[QUEST] “${newQuest.title}” added to your saga.`);
   };
 
   // Sync with live GameContext player immediately whenever avatar or stats change
@@ -147,8 +154,12 @@ export default function DashboardPage() {
     );
   }
 
-  const activeQuest = quests.find((q) => q.status === 'active') ?? quests[0];
-  const sideQuest = quests.find((q) => q.category === 'side' && q.status === 'available') ?? quests[1];
+  const activeAndAvailable = quests.filter(
+    (q) => !q.is_archived && q.status !== 'completed' && q.status !== 'failed'
+  );
+  const displayedQuests = activeAndAvailable.length > 0
+    ? activeAndAvailable
+    : quests.filter((q) => !q.is_archived);
 
   return (
     <div className="space-y-6">
@@ -160,11 +171,23 @@ export default function DashboardPage() {
         newLevel={levelUpModal.next}
       />
 
+      {/* Forge Quest Modal */}
+      <ForgeQuestModal
+        isOpen={isForgeModalOpen}
+        onClose={() => setIsForgeModalOpen(false)}
+        onQuestForged={handleQuestForged}
+        playerLevel={player.stats.level}
+      />
+
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-20 right-4 z-50 bg-[#7ef9c7] text-black font-black text-sm px-4 py-3 rounded-xl border-pixel-thick shadow-solid-lg flex items-center gap-2 animate-bounce">
-          <span>✨</span>
-          <span>{toastMessage}</span>
+        <div className="fixed top-20 right-4 z-50 bg-[#7ef9c7] text-black font-black text-xs sm:text-sm px-5 py-3.5 rounded-xl border-pixel-thick shadow-solid-lg flex items-start gap-3 animate-fade-in">
+          <span className="text-xl leading-none mt-0.5">⚡</span>
+          <div className="space-y-0.5 text-left font-heading">
+            {toastMessage.split('\n').map((line, idx) => (
+              <p key={idx} className="leading-tight">{line}</p>
+            ))}
+          </div>
         </div>
       )}
 
@@ -172,13 +195,45 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Your Saga (6 cols) */}
         <div className="lg:col-span-6">
-          <HeroSagaCard player={player} onClaimDailyBonus={handleClaimBonus} />
+          <HeroSagaCard
+            player={player}
+            onClaimDailyBonus={handleClaimBonus}
+            onForgeQuest={() => setIsForgeModalOpen(true)}
+          />
         </div>
 
         {/* Right Column: Quest Column (6 cols) */}
         <div className="lg:col-span-6 flex flex-col gap-6">
-          {activeQuest && <QuestCard quest={activeQuest} onAction={handleQuestComplete} />}
-          {sideQuest && <QuestCard quest={sideQuest} onAction={handleQuestComplete} />}
+          {displayedQuests.length === 0 ? (
+            <div className="border-pixel-thick border-dashed border-[#5a4880] rounded-2xl p-8 sm:p-12 text-center bg-[#1c122c]/85 flex flex-col items-center justify-center space-y-4 shadow-solid min-h-[360px]">
+              <div className="w-16 h-16 rounded-2xl bg-[#2b1b45] border-2 border-black flex items-center justify-center text-3xl shadow-solid-sm">
+                📜
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-xl sm:text-2xl font-black font-heading text-[#7ef9c7] uppercase tracking-wide">
+                  NO ACTIVE QUESTS
+                </h3>
+                <p className="text-sm font-medium text-zinc-300 max-w-sm">
+                  Your saga awaits its next challenge.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  playSfx('click');
+                  setIsForgeModalOpen(true);
+                }}
+                className="inline-flex items-center gap-2 bg-[#fad02c] hover:bg-[#ffe380] text-black font-black text-sm px-6 py-3 rounded-xl border-pixel-thick shadow-solid uppercase tracking-wider font-heading transition-all active:translate-x-0.5 active:translate-y-0.5 cursor-pointer"
+              >
+                <span className="text-base font-black">＋</span>
+                <span>FORGE QUEST</span>
+              </button>
+            </div>
+          ) : (
+            displayedQuests.map((q) => (
+              <QuestCard key={q.id} quest={q} onAction={handleQuestComplete} />
+            ))
+          )}
         </div>
       </div>
 

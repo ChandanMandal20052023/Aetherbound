@@ -23,7 +23,7 @@
 
   body {
     background-color: var(--bg-base);
-    background-image: 
+    background-image:
       linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
     background-size: 32px 32px;
@@ -32,22 +32,35 @@
     min-height: 100vh;
   }
 
-  h1, h2, h3, h4, h5, h6, .font-heading {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .font-heading {
     font-family: var(--font-rubik), system-ui, sans-serif;
   }
 }
 
 /* Neo-Brutalist Pop-Anime Shadows */
-.shadow-solid {
+.shadow-solid,
+.neo-shadow-md {
   box-shadow: 4px 4px 0px #000000;
 }
 
-.shadow-solid-sm {
+.shadow-solid-sm,
+.neo-shadow-sm {
   box-shadow: 2px 2px 0px #000000;
 }
 
-.shadow-solid-lg {
+.shadow-solid-lg,
+.neo-shadow-lg {
   box-shadow: 6px 6px 0px #000000;
+}
+
+.neo-shadow-xl {
+  box-shadow: 8px 8px 0px #000000;
 }
 
 .shadow-solid-mint {
@@ -72,18 +85,26 @@
 }
 
 /* Interactive Click / Tap Effect */
-.btn-press {
+.btn-press,
+.neo-btn {
   transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
 
-.btn-press:hover {
+.btn-press:hover,
+.neo-btn:hover {
   transform: translate(-1px, -1px);
   box-shadow: 5px 5px 0px #000000;
 }
 
-.btn-press:active {
+.btn-press:active,
+.neo-btn:active {
   transform: translate(3px, 3px);
-  box-shadow: 0px 0px 0px #000000;
+  box-shadow: 0px 0px 0px #000000 !important;
+}
+
+.neo-btn-sm:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px #000000 !important;
 }
 
 /* Physical Decal / Tape Tilt */
@@ -101,23 +122,19 @@
 
 /* Diagonal Stripes for Level/XP Bars */
 .bg-stripes-mint {
-  background-image: repeating-linear-gradient(
-    45deg,
-    #7ef9c7,
-    #7ef9c7 10px,
-    #68e8b4 10px,
-    #68e8b4 20px
-  );
+  background-image: repeating-linear-gradient(45deg,
+      #7ef9c7,
+      #7ef9c7 10px,
+      #68e8b4 10px,
+      #68e8b4 20px);
 }
 
 .bg-stripes-peach {
-  background-image: repeating-linear-gradient(
-    45deg,
-    #ffb68d,
-    #ffb68d 10px,
-    #f59b6c 10px,
-    #f59b6c 20px
-  );
+  background-image: repeating-linear-gradient(45deg,
+      #ffb68d,
+      #ffb68d 10px,
+      #f59b6c 10px,
+      #f59b6c 20px);
 }
 
 /* Material Symbols alignment */

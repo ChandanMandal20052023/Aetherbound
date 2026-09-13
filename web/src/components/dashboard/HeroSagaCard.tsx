@@ -11,11 +11,13 @@ interface HeroSagaCardProps {
   player: PlayerProfile;
   onClaimDailyBonus?: () => void;
   onSelectAvatar?: (index: number) => void;
+  onForgeQuest?: () => void;
 }
 
 export function HeroSagaCard({
   player,
   onClaimDailyBonus,
+  onForgeQuest,
 }: HeroSagaCardProps) {
   const { t, openProfile, playSfx } = useGame();
   const bonusClaimed = player.stats.dailyBonusClaimed;
@@ -29,16 +31,39 @@ export function HeroSagaCard({
     <section className="bg-[#6853a8] border-pixel-thick shadow-solid-lg rounded-2xl relative overflow-hidden flex flex-col justify-between">
       {/* Top Info Header Overlay */}
       <div className="p-6 pb-0 relative z-10">
-        {/* Tilted Header Tab */}
-        <div className="inline-block -rotate-2 mb-2">
-          <span className="bg-[#ffb295] text-black font-black text-sm px-4 py-1.5 rounded-md border-pixel shadow-solid tracking-wide inline-block uppercase">
-            Your Saga
-          </span>
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            {/* Tilted Header Tab */}
+            <div className="inline-block -rotate-2 mb-2">
+              <span className="bg-[#ffb295] text-black font-black text-sm px-4 py-1.5 rounded-md border-pixel shadow-solid tracking-wide inline-block uppercase">
+                Your Saga
+              </span>
+            </div>
+            {/* Massive Mint Level Header */}
+            <h2 className="text-4xl sm:text-5xl font-black text-[#7ef9c7] drop-shadow-[0_2px_0_#000000] tracking-tight font-heading">
+              Level {player.stats.level}
+            </h2>
+          </div>
+
+          {/* ＋ FORGE QUEST Action Button */}
+          {onForgeQuest && (
+            <button
+              type="button"
+              id="forge-quest-btn"
+              onClick={() => {
+                playSfx('click');
+                onForgeQuest();
+              }}
+              className="group relative inline-flex items-center gap-2 bg-[#fad02c] hover:bg-[#ffe380] text-black font-black text-xs sm:text-sm px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl border-pixel-thick shadow-solid transition-all active:translate-x-0.5 active:translate-y-0.5 hover:-translate-y-0.5 cursor-pointer uppercase tracking-wider select-none font-heading mt-1"
+              title="Forge a new quest in your saga"
+            >
+              <span className="text-base sm:text-lg leading-none font-black transition-transform group-hover:rotate-90 duration-200">
+                ＋
+              </span>
+              <span>FORGE QUEST</span>
+            </button>
+          )}
         </div>
-        {/* Massive Mint Level Header */}
-        <h2 className="text-4xl sm:text-5xl font-black text-[#7ef9c7] drop-shadow-[0_2px_0_#000000] tracking-tight font-heading">
-          Level {player.stats.level}
-        </h2>
       </div>
 
       {/* Anime Character Illustration Stage */}

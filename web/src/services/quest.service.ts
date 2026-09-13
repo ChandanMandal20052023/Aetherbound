@@ -1,31 +1,61 @@
-import type { Quest, QuestCategory, QuestRarity, QuestRisk } from '@/types/quest';
+import type { Quest, CreateQuestInput } from '@/types/quest';
 
 export const questService = {
   async getQuests(): Promise<Quest[]> {
     const res = await fetch('/api/quests', { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch quests');
-    return res.json();
+    const json = await res.json();
+    if (Array.isArray(json)) return json;
+    if (json.data && Array.isArray(json.data.quests)) return json.data.quests;
+    if (Array.isArray(json.quests)) return json.quests;
+    return [];
   },
 
-  async createQuest(data: {
-    title: string;
-    description?: string;
-    category: QuestCategory;
-    rarity: QuestRarity;
-    risk: QuestRisk;
-    emoji?: string;
-    deadline?: string;
-  }): Promise<Quest> {
+  async getQuest(id: string): Promise<Quest> {
+    const res = await fetch(`/api/quests/${id}`, { cache: 'no-store' });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message ?? err.error ?? 'Quest not found');
+    }
+    const json = await res.json();
+    return json.data?.quest ?? json.quest ?? json;
+  },
+
+  async createQuest(data: CreateQuestInput): Promise<Quest> {
     const res = await fetch('/api/quests', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
     if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error ?? 'Failed to create quest');
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message ?? err.error ?? 'Failed to forge quest');
     }
-    return res.json();
+    const json = await res.json();
+    return json.data?.quest ?? json.quest ?? json;
+  },
+
+  async updateQuest(id: string, data: Partial<CreateQuestInput>): Promise<Quest> {
+    const res = await fetch(`/api/quests/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message ?? err.error ?? 'Failed to update quest');
+    }
+    const json = await res.json();
+    return json.data?.quest ?? json.quest ?? json;
+  },
+
+  async deleteQuest(id: string): Promise<boolean> {
+    const res = await fetch(`/api/quests/${id}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message ?? err.error ?? 'Failed to delete quest');
+    }
+    return true;
   },
 
   async resolveQuest(questId: string): Promise<{
@@ -36,8 +66,8 @@ export const questService = {
   }> {
     const res = await fetch(`/api/quests/${questId}/resolve`, { method: 'POST' });
     if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error ?? 'Failed to resolve quest');
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message ?? err.error ?? 'Failed to resolve quest');
     }
     return res.json();
   },

@@ -13,8 +13,25 @@ export function QuestCard({ quest, onAction }: QuestCardProps) {
   const [completed, setCompleted] = useState(quest.status === 'completed');
   const [loading, setLoading] = useState(false);
 
-  const isMainOrActive = quest.category === 'main' || quest.category === 'active';
-  const isEpic = quest.rarity === 'epic' || quest.rarity === 'legendary';
+  const categoryUpper = (quest.category || '').toUpperCase();
+  const difficultyDisplay = (quest.difficulty || quest.rarity || 'STANDARD').toUpperCase();
+  const categoryBadge =
+    categoryUpper === 'ACTIVE'
+      ? 'ACTIVE QUEST'
+      : categoryUpper === 'MAIN'
+      ? 'MAIN QUEST'
+      : categoryUpper === 'SIDE'
+      ? 'SIDE QUEST'
+      : `${categoryUpper} QUEST`;
+
+  const isDarkCard =
+    categoryUpper === 'MAIN' ||
+    categoryUpper === 'ACTIVE' ||
+    difficultyDisplay === 'EPIC' ||
+    difficultyDisplay === 'LEGENDARY';
+
+  const xpAmount = quest.xp_reward ?? quest.reward?.xp ?? 50;
+  const goldAmount = quest.gold_reward ?? quest.reward?.gold ?? 20;
 
   const handleAction = () => {
     setLoading(true);
@@ -26,11 +43,11 @@ export function QuestCard({ quest, onAction }: QuestCardProps) {
   };
 
   // Neo-Brutalist Card color themes based on Stitch spec
-  const bgTheme = isMainOrActive
+  const bgTheme = isDarkCard
     ? 'bg-[#6b55ab] text-white'
     : 'bg-[#7ef9c7] text-black';
 
-  const buttonBg = isMainOrActive
+  const buttonBg = isDarkCard
     ? 'bg-[#ff9873] hover:bg-[#ff865c] text-black'
     : 'bg-[#cbbeeb] hover:bg-[#baa8e6] text-black';
 
@@ -48,17 +65,12 @@ export function QuestCard({ quest, onAction }: QuestCardProps) {
           <div
             className={cn(
               'border-pixel font-black text-xs px-3.5 py-1 rounded-md shadow-solid flex items-center gap-1.5 uppercase tracking-wide',
-              isMainOrActive ? 'bg-[#ffb295] text-black' : 'bg-white text-black'
+              isDarkCard ? 'bg-[#ffb295] text-black' : 'bg-white text-black'
             )}
           >
-            <span>{quest.emoji}</span>
+            <span>{quest.emoji || '⚡'}</span>
             <span>
-              {quest.category === 'active'
-                ? 'ACTIVE QUEST'
-                : quest.category === 'main'
-                ? 'MAIN QUEST'
-                : 'SIDE QUEST'}{' '}
-              • {quest.rarity}
+              {categoryBadge} • {difficultyDisplay}
             </span>
           </div>
 
@@ -74,7 +86,7 @@ export function QuestCard({ quest, onAction }: QuestCardProps) {
           <h3
             className={cn(
               'text-2xl sm:text-3xl font-black tracking-tight font-heading',
-              isMainOrActive
+              isDarkCard
                 ? 'text-white drop-shadow-[0_2px_0_#000000]'
                 : 'text-black'
             )}
@@ -87,13 +99,13 @@ export function QuestCard({ quest, onAction }: QuestCardProps) {
         <div
           className={cn(
             'my-4 space-y-2',
-            isMainOrActive ? 'text-white' : 'text-black'
+            isDarkCard ? 'text-white' : 'text-black'
           )}
         >
           <p
             className={cn(
               'text-sm font-medium leading-relaxed',
-              isMainOrActive ? 'text-white/95' : 'text-zinc-900'
+              isDarkCard ? 'text-white/95' : 'text-zinc-900'
             )}
           >
             {quest.description}
@@ -102,14 +114,14 @@ export function QuestCard({ quest, onAction }: QuestCardProps) {
             <span
               className={cn(
                 'text-xs font-black tracking-wide uppercase px-2.5 py-1 rounded border-2 border-black shadow-solid-sm',
-                isMainOrActive
+                isDarkCard
                   ? 'bg-[#fad02c] text-black'
                   : 'bg-white text-black'
               )}
             >
-              Rewards: {quest.reward.xp} XP{' '}
-              {quest.reward.item ? `+ ${quest.reward.item}` : ''}
-              {quest.reward.gold ? `+ ${quest.reward.gold} Gold` : ''}
+              REWARDS: {xpAmount} XP{' '}
+              {quest.reward?.item ? `+ ${quest.reward.item}` : ''}
+              {goldAmount ? `• ${goldAmount} GOLD` : ''}
             </span>
           </div>
         </div>
@@ -132,7 +144,7 @@ export function QuestCard({ quest, onAction }: QuestCardProps) {
             ? 'RESOLVED ✓'
             : loading
             ? 'RESOLVING...'
-            : isMainOrActive
+            : isDarkCard
             ? 'RESOLVE'
             : 'START'}
         </span>

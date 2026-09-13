@@ -2,103 +2,241 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { verifySession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { questXpReward, questGoldReward } from '@/lib/progression';
-import type { QuestRarity, QuestRisk, QuestCategory } from '@/types/quest';
+import { calculateQuestReward } from '@/lib/progression';
+
+const ALLOWED_CATEGORIES = [
+  'INTELLECT',
+  'STRENGTH',
+  'DISCIPLINE',
+  'FOCUS',
+  'CREATIVITY',
+  'main',
+  'side',
+  'active',
+] as const;
+
+const ALLOWED_DIFFICULTIES = [
+  'TRIVIAL',
+  'STANDARD',
+  'RARE',
+  'EPIC',
+  'LEGENDARY',
+  'trivial',
+  'common',
+  'rare',
+  'epic',
+  'legendary',
+] as const;
+
+const ALLOWED_FREQUENCIES = ['ONE_TIME', 'DAILY'] as const;
+
+const CreateQuestSchema = z
+  .object({
+    title: z.string().trim().min(1, 'Quest title is required.').max(120, 'Title cannot exceed 120 characters.'),
+    description: z.string().optional().default(''),
+    category: z.string().refine(
+      (val) => ALLOWED_CATEGORIES.some((c) => c.toLowerCase() === val.toLowerCase()),
+      { message: 'Invalid category. Choose Intellect, Strength, Discipline, Focus, or Creativity.' },
+    ),
+    difficulty: z
+      .string()
+      .optional()
+      .refine(
+        (val) => !val || ALLOWED_DIFFICULTIES.some((d) => d.toLowerCase() === val.toLowerCase()),
+        { message: 'Invalid difficulty. Choose Trivial, Standard, Rare, Epic, or Legendary.' },
+      ),
+    rarity: z
+      .string()
+      .optional()
+      .refine(
+        (val) => !val || ALLOWED_DIFFICULTIES.some((d) => d.toLowerCase() === val.toLowerCase()),
+        { message: 'Invalid rarity/difficulty.' },
+      ),
+    frequency: z
+      .string()
+      .optional()
+      .default('ONE_TIME')
+      .refine(
+        (val) => ALLOWED_FREQUENCIES.some((f) => f.toLowerCase() === val.toLowerCase()),
+        { message: 'Invalid frequency. Choose ONE_TIME or DAILY.' },
+      ),
+    due_date: z.string().optional().nullable(),
+    deadline: z.string().optional().nullable(),
+    risk: z.enum(['low', 'medium', 'high']).optional().default('medium'),
+    emoji: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      const dateStr = data.due_date ?? data.deadline;
+      if (!dateStr) return true;
+      const parsed = new Date(dateStr);
+      if (isNaN(parsed.getTime())) return false;
+      // Compare with beginning of today
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return parsed >= today;
+    },
+    {
+      message: 'Due date cannot be earlier than today.',
+      path: ['due_date'],
+    },
+  );
+
+function formatQuest(q: any) {
+  return {
+    id: q.id,
+    title: q.title,
+    description: q.description,
+    category: q.category,
+    difficulty: q.difficulty ?? q.rarity?.toUpperCase() ?? 'STANDARD',
+    rarity: q.rarity,
+    frequency: q.frequency ?? 'ONE_TIME',
+    risk: q.risk,
+    status: q.status,
+    xp_reward: q.xpReward,
+    gold_reward: q.goldReward,
+    reward: { xp: q.xpReward, gold: q.goldReward },
+    emoji: q.emoji,
+    due_date: q.deadline,
+    deadline: q.deadline,
+    is_archived: q.isArchived,
+    created_at: q.createdAt,
+    updated_at: q.updatedAt,
+  };
+}
 
 // GET /api/quests
 export async function GET() {
   const session = await verifySession();
   if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json(
+      { success: false, error: { code: 'UNAUTHORIZED', message: 'Authentication required.' } },
+      { status: 401 },
+    );
   }
 
   const quests = await prisma.quest.findMany({
-    where: { userId: session.userId },
+    where: {
+      userId: session.userId,
+      isArchived: false,
+    },
     orderBy: [
-      // active first, then available, then completed
-      { status: 'asc' },
+      { status: 'asc' }, // active first, then available, then completed
       { createdAt: 'desc' },
     ],
   });
 
-  return NextResponse.json(quests.map((q) => ({
-    id: q.id,
-    title: q.title,
-    description: q.description,
-    category: q.category,
-    rarity: q.rarity,
-    risk: q.risk,
-    status: q.status,
-    reward: { xp: q.xpReward, gold: q.goldReward },
-    emoji: q.emoji,
-    deadline: q.deadline ?? undefined,
-  })));
+  const formatted = quests.map(formatQuest);
+
+  // Return both array structure and blueprint envelope for seamless compatibility
+  const response = NextResponse.json(formatted);
+  // Also attach standard headers and fields
+  return Object.assign(response, {
+    success: true,
+    data: { quests: formatted },
+  });
 }
 
-const CreateQuestSchema = z.object({
-  title: z.string().min(1).max(100),
-  description: z.string().optional().default('No briefing recorded. Venture boldly.'),
-  category: z.enum(['main', 'side', 'active']),
-  rarity: z.enum(['trivial', 'common', 'rare', 'epic', 'legendary']),
-  risk: z.enum(['low', 'medium', 'high']),
-  emoji: z.string().optional(),
-  deadline: z.string().optional(),
-});
-
-// POST /api/quests — create a new quest (XP/Gold auto-calculated)
 export async function POST(req: NextRequest) {
-  const session = await verifySession();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const session = await verifySession();
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: { code: 'UNAUTHORIZED', message: 'Authentication required.' } },
+        { status: 401 },
+      );
+    }
+
+    const body = await req.json().catch(() => ({}));
+    const parsed = CreateQuestSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: parsed.error.issues[0].message,
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    const { title, description, category, difficulty, rarity, frequency, due_date, deadline, risk, emoji } =
+      parsed.data;
+
+    const finalDifficulty = (difficulty ?? rarity ?? 'STANDARD').toUpperCase();
+    const finalCategory = category.toUpperCase();
+    const finalDueDate = due_date ?? deadline ?? null;
+    const finalFrequency = frequency.toUpperCase();
+
+    // Fetch player level for accurate server-side progression calculations
+    const stats = await prisma.playerStats.findUnique({ where: { userId: session.userId } });
+    const playerLevel = stats?.level ?? 1;
+
+    // XP and Gold are strictly calculated on the server. Client input is never trusted.
+    const rewards = calculateQuestReward(finalDifficulty, finalCategory, playerLevel);
+
+    const emojiCategoryMap: Record<string, string> = {
+      INTELLECT: '🧠',
+      STRENGTH: '⚔️',
+      DISCIPLINE: '🔥',
+      FOCUS: '🧪',
+      CREATIVITY: '🎨',
+      MAIN: '⚡',
+      SIDE: '🧪',
+      ACTIVE: '🐉',
+    };
+
+    const finalEmoji = emoji || emojiCategoryMap[finalCategory] || '⚡';
+
+    const quest = await prisma.quest.create({
+      data: {
+        userId: session.userId,
+        title,
+        description: description || 'No briefing recorded. Venture boldly.',
+        category: finalCategory,
+        difficulty: finalDifficulty,
+        rarity: finalDifficulty.toLowerCase(),
+        risk: risk || 'medium',
+        frequency: finalFrequency,
+        xpReward: rewards.xp,
+        goldReward: rewards.gold,
+        emoji: finalEmoji,
+        deadline: finalDueDate,
+        status: 'available',
+      },
+    });
+
+    const formatted = formatQuest(quest);
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          quest: formatted,
+        },
+        // Top-level convenience properties
+        quest: formatted,
+        id: quest.id,
+        title: quest.title,
+        reward: formatted.reward,
+        message: 'Quest forged successfully.',
+      },
+      { status: 201 },
+    );
+  } catch (err: any) {
+    console.error('CRITICAL POST /api/quests ERROR:', err);
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: 'SERVER_ERROR',
+          message: err?.message || 'Internal server error while forging quest.',
+          stack: process.env.NODE_ENV !== 'production' ? err?.stack : undefined,
+        },
+      },
+      { status: 500 },
+    );
   }
-
-  const body = await req.json();
-  const parsed = CreateQuestSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
-  }
-
-  const { title, description, category, rarity, risk, emoji, deadline } = parsed.data;
-
-  const stats = await prisma.playerStats.findUnique({ where: { userId: session.userId } });
-  const level = stats?.level ?? 1;
-
-  // XP and Gold are server-calculated using progression math
-  const xpReward = questXpReward(level, rarity as QuestRarity, risk as QuestRisk);
-  const goldReward = questGoldReward(level, rarity as QuestRarity, risk as QuestRisk);
-
-  const emojiMap: Record<QuestCategory, string> = {
-    main: '⚡',
-    side: '🧪',
-    active: '🐉',
-  };
-
-  const quest = await prisma.quest.create({
-    data: {
-      userId: session.userId,
-      title,
-      description,
-      category,
-      rarity,
-      risk,
-      xpReward,
-      goldReward,
-      emoji: emoji ?? emojiMap[category as QuestCategory],
-      deadline: deadline ?? null,
-      status: category === 'active' ? 'active' : 'available',
-    },
-  });
-
-  return NextResponse.json({
-    id: quest.id,
-    title: quest.title,
-    description: quest.description,
-    category: quest.category,
-    rarity: quest.rarity,
-    risk: quest.risk,
-    status: quest.status,
-    reward: { xp: quest.xpReward, gold: quest.goldReward },
-    emoji: quest.emoji,
-    deadline: quest.deadline ?? undefined,
-  }, { status: 201 });
 }

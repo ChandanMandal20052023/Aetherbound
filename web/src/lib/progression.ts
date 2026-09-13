@@ -80,6 +80,36 @@ export function questGoldReward(
   );
 }
 
+/**
+ * Centralized Server-Side Reward Calculation Engine for Forge Quest.
+ * Server is the sole authority for rewards.
+ */
+export function calculateQuestReward(
+  difficulty: string,
+  category?: string,
+  playerLevel: number = 1,
+): { xp: number; gold: number } {
+  const norm = (difficulty || 'STANDARD').toUpperCase();
+  const rewardTable: Record<string, { xp: number; gold: number }> = {
+    TRIVIAL: { xp: 25, gold: 10 },
+    STANDARD: { xp: 50, gold: 20 },
+    COMMON: { xp: 50, gold: 20 },
+    RARE: { xp: 80, gold: 30 },
+    EPIC: { xp: 120, gold: 40 },
+    LEGENDARY: { xp: 200, gold: 75 },
+  };
+
+  const base = rewardTable[norm] ?? rewardTable.STANDARD;
+  // If playerLevel > 1, apply a modest leveling multiplier
+  const levelMult = Math.max(1, 1 + (playerLevel - 1) * 0.05);
+
+  return {
+    xp: Math.round(base.xp * levelMult),
+    gold: Math.round(base.gold * levelMult),
+  };
+}
+
+
 // ─── Level-Up Check ──────────────────────────────────────────────────────────
 
 export interface LevelUpResult {

@@ -9,13 +9,23 @@ const PUBLIC_PATHS = ['/login', '/register', '/api/auth/login', '/api/auth/regis
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Allow public paths and static assets
+  // Allow landing page ('/'), public paths, and static assets
   if (
+    pathname === '/' ||
     PUBLIC_PATHS.some((p) => pathname.startsWith(p)) ||
     pathname.startsWith('/_next') ||
+    pathname.startsWith('/__nextjs_font') ||
     pathname.startsWith('/avatars') ||
     pathname.includes('.')
   ) {
+    // If authenticated user visits login or register, redirect to dashboard
+    if (pathname === '/login' || pathname === '/register') {
+      const token = req.cookies.get(COOKIE_NAME)?.value;
+      const session = token ? await verifyTokenString(token) : null;
+      if (session) {
+        return NextResponse.redirect(new URL('/dashboard', req.url));
+      }
+    }
     return NextResponse.next();
   }
 

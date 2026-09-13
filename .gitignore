@@ -9,7 +9,18 @@ web/build/
 .next/
 
 # Environment files
+.env
+.env*
+*.env
+web/.env
+web/.env*
 web/.env*.local
+!.env.example
+!web/.env.example
+
+# Scratch and temporary scripts
+scratch/
+web/scratch/
 
 # System & IDE
 .DS_Store
