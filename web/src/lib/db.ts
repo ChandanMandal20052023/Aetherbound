@@ -9,13 +9,17 @@ import { PrismaClient } from '@prisma/client';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+const globalForPrisma = globalThis as unknown as {
+  prisma?: PrismaClient;
+  pool?: Pool;
+};
 
 function createClient(): PrismaClient {
   const url = process.env.DATABASE_URL ?? 'file:./dev.db';
 
   if (url.startsWith('postgres://') || url.startsWith('postgresql://')) {
-    const pool = new Pool({ connectionString: url });
+    const pool = globalForPrisma.pool ?? new Pool({ connectionString: url });
+    globalForPrisma.pool = pool;
     const adapter = new PrismaPg(pool);
     return new PrismaClient({
       adapter,
@@ -23,7 +27,7 @@ function createClient(): PrismaClient {
     });
   }
 
-  // SQLite fallback
+  // SQLite fallback (local dev only)
   const { PrismaBetterSqlite3 } = require('@prisma/adapter-better-sqlite3');
   const dbPath = url.replace('file:', '');
   const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` });
@@ -34,5 +38,4 @@ function createClient(): PrismaClient {
 }
 
 export const prisma = globalForPrisma.prisma ?? createClient();
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+globalForPrisma.prisma = prisma;

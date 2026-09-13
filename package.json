@@ -1,0 +1,11 @@
+{
+  "name": "aetherbound",
+  "version": "1.2.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix web run dev",
+    "build": "npm --prefix web run build",
+    "start": "npm --prefix web start",
+    "postinstall": "npm --prefix web run postinstall"
+  }
+}
