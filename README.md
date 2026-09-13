@@ -242,7 +242,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 🛡️ Built For Hackathon Evaluation
 
-Developed with ❤️ for **IIT Bombay Techfest**. Designed with zero mock placeholders, zero external asset broken links, and 100% functional live interactions across all 23 routes.
+Developed with ❤️ for **IIT Bhubaneswar Tech Zephyr**. Designed with zero mock placeholders, zero external asset broken links, and 100% functional live interactions across all 23 routes.
 
 <div align="center">
   <sub>Aetherbound Life RPG • Cycle 3: Moonfall • Sovereign Council Protocol</sub>
