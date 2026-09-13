@@ -198,7 +198,6 @@ export default function DashboardPage() {
           <HeroSagaCard
             player={player}
             onClaimDailyBonus={handleClaimBonus}
-            onForgeQuest={() => setIsForgeModalOpen(true)}
           />
         </div>
 
@@ -230,9 +229,27 @@ export default function DashboardPage() {
               </button>
             </div>
           ) : (
-            displayedQuests.map((q) => (
-              <QuestCard key={q.id} quest={q} onAction={handleQuestComplete} />
-            ))
+            <>
+              {displayedQuests.map((q) => (
+                <QuestCard key={q.id} quest={q} onAction={handleQuestComplete} />
+              ))}
+
+              {/* ＋ FORGE QUEST Button below the two cards on the right side */}
+              <button
+                type="button"
+                id="forge-quest-btn"
+                onClick={() => {
+                  playSfx('click');
+                  setIsForgeModalOpen(true);
+                }}
+                className="w-full py-3.5 sm:py-4 px-6 rounded-2xl bg-[#fad02c] hover:bg-[#ffe380] text-black font-black text-sm sm:text-base border-pixel-thick shadow-solid-lg uppercase tracking-wider font-heading transition-all active:translate-x-0.5 active:translate-y-0.5 hover:-translate-y-0.5 flex items-center justify-center gap-2.5 cursor-pointer select-none group"
+              >
+                <span className="text-xl leading-none font-black transition-transform group-hover:rotate-90 duration-200">
+                  ＋
+                </span>
+                <span>FORGE QUEST</span>
+              </button>
+            </>
           )}
         </div>
       </div>
